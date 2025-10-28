@@ -79,11 +79,11 @@ Standard Node.js setup. Yarn is recommended as the package manager.
 - Project: `<YourUEProject>/Plugins/ReactorUMG`  
 - Engine (optional): `<UE_5.x>/Engine/Plugins/Marketplace/ReactorUMG`
 
-### Enable the Plugin
-UE → `Edit > Plugins` → search **ReactorUMG** → enable → restart if needed.
-
 ### Initialize Environment
 Run `SetupEnv.bat` in `Plugins/ReactorUMG/Tools` to set up the environment.
+
+### Enable the Plugin
+UE → `Edit > Plugins` → search **ReactorUMG** → enable → restart if needed.
 
 ### Create UI
 
