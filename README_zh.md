@@ -78,7 +78,7 @@
 
 <h3 id="lRyZS">初始化环境</h3>
 
-+ 到`Plugins/ReactorUMG/Tools`目录下双击允许`SetupEnv.bat`初始化脚本。
++ 到`Plugins/ReactorUMG/Tools`目录下双击运行`SetupEnv.bat`初始化脚本。
 
 <h3 id="iLatG">启用插件</h3>
 
