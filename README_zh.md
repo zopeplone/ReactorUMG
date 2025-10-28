@@ -76,13 +76,13 @@
 + 项目级：`<YourUEProject>/Plugins/ReactorUMG`
 + 引擎级（可选）：`<UE_5.x>/Engine/Plugins/Marketplace/ReactorUMG`
 
-<h3 id="iLatG">启用插件</h3>
-
-+ 打开 UE → `Edit > Plugins` 搜索 **ReactorUMG** → 勾选启用 → 按需重启编辑器。
-
 <h3 id="lRyZS">初始化环境</h3>
 
 + 到`Plugins/ReactorUMG/Tools`目录下双击允许`SetupEnv.bat`初始化脚本。
+
+<h3 id="iLatG">启用插件</h3>
+
++ 打开 UE → `Edit > Plugins` 搜索 **ReactorUMG** → 勾选启用 → 按需重启编辑器。
 
 <h3 id="vzBuB">创建 UI</h3>
 <h4 id="tWaIr">创建游戏运行时UI</h4>
