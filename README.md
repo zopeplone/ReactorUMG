@@ -9,7 +9,7 @@
 
 ---
 
-[中文简介](README_zh.md)
+[跳转中文](README_zh.md)
 
 ## Table of Contents
 - [ReactorUMG](#reactorumg)
