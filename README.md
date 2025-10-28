@@ -69,7 +69,7 @@ UMG is powerful, but it does not have a text-first, web-like development flow. T
 ## Install & Quick Start
 
 ### Install Node.js and a Package Manager
-Standard Node.js setup. Install one package manager you prefer.
+Standard Node.js setup. Yarn is recommended as the package manager.
 
 ### Get the Plugin
 - Download the latest **ReactorUMG** release, or
