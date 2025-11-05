@@ -98,38 +98,6 @@
 			]
 		},
 		{
-			"Name": "Rive",
-			"Type": "Runtime",
-			"LoadingPhase": "Default",
-			"WhitelistPlatforms": [
-				"Win64"
-			]
-		},
-		{
-			"Name": "RiveShaders",
-			"Type": "Runtime",
-			"LoadingPhase": "PostConfigInit",
-			"WhitelistPlatforms": [
-				"Win64"
-			]
-		},
-		{
-			"Name": "RiveStats",
-			"Type": "Runtime",
-			"LoadingPhase": "PostConfigInit",
-			"WhitelistPlatforms": [
-				"Win64"
-			]
-		},
-		{
-			"Name": "RiveRenderer",
-			"Type": "RuntimeNoCommandlet",
-			"LoadingPhase": "PreDefault",
-			"WhitelistPlatforms": [
-				"Win64"
-			]
-		},
-		{
 			"Name": "AutoMixinEditor",
 			"Type": "Editor",
 			"LoadingPhase": "PostEngineInit"
