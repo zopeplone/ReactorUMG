@@ -1,7 +1,9 @@
 # ReactorUMG
 ![](./docs/imgs/Cover.png)
+ReactorUMG is a helper plugin for Unreal Engine that lets you build **UMG** game UI and editor UI using **React**.  
+It is built on **Puerts/PuertsTS** and uses text-based code that works well with AI tools, so you can iterate quickly like a web front‑end workflow.
 
-> **Keywords:** Unreal Engine, UE5, UMG, UI, Slate, React, TypeScript, Plugin, Hot Reload, Live Preview, Puerts/PuertsTS, Game UI Framework
+> **Keywords:** Unreal Engine, UE5, UMG, UI, Slate, React, TypeScript, Plugin, Live Preview, Puerts
 
 ⚠️ **Alpha Stage:** APIs and structure may change before a stable release.
 
@@ -14,7 +16,6 @@
 ## Table of Contents
 - [ReactorUMG](#reactorumg)
   - [Table of Contents](#table-of-contents)
-  - [Overview](#overview)
   - [Why ReactorUMG](#why-reactorumg)
   - [Key Features](#key-features)
   - [Requirements](#requirements)
@@ -36,11 +37,6 @@
   - [Links \& Resources](#links--resources)
 
 ---
-
-## Overview
-ReactorUMG is a helper plugin for Unreal Engine that lets you build **UMG** game UI and editor UI using **React**.  
-It is built on **Puerts/PuertsTS** and uses text-based code that works well with AI tools, so you can iterate quickly like a web front‑end workflow.
-
 ## Why ReactorUMG
 UMG is powerful, but it does not have a text-first, web-like development flow. That makes it harder to reuse AI and front‑end practices (components, hot reload, linting, tests).  
 **ReactorUMG** lets you build UI with **React + TypeScript**, preview changes live, and bring modern web development methods into Unreal UI work.
