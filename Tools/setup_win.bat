@@ -4,7 +4,12 @@ setlocal EnableDelayedExpansion
 rem Resolve key project paths based on this script's location.
 set "TOOLS_DIR=%~dp0"
 for %%i in ("%TOOLS_DIR%..") do set "PLUGIN_DIR=%%~fi"
-for %%i in ("%PLUGIN_DIR%\..") do set "PROJECT_ROOT=%%~fi"
+for %%i in ("%PLUGIN_DIR%\..\..") do set "PROJECT_ROOT=%%~fi"
+
+echo Plugin dir: %PLUGIN_DIR%
+echo Project Root: %PROJECT_ROOT%
+
+pause
 
 set "THIRD_PARTY_DIR=%PLUGIN_DIR%\Source\Puerts\ThirdParty"
 set "TS_TEMPLATE_DIR=%PLUGIN_DIR%\Scripts\Project"
@@ -26,16 +31,25 @@ if defined REACTORUMG_NODE_ARCHIVE set "NODE_ARCHIVE=%REACTORUMG_NODE_ARCHIVE%"
 set "NODE_INSTALL_DIR=%VENDOR_DIR%\%NODE_DIST_BASENAME%"
 if defined REACTORUMG_NODE_INSTALL_DIR set "NODE_INSTALL_DIR=%REACTORUMG_NODE_INSTALL_DIR%"
 
+echo node download url: %NODE_URL%
+echo Node.js install directory: %NODE_INSTALL_DIR%
+
+pause
+
 rem Allow callers to override the desired V8 package via environment variables.
 if not defined REACTORUMG_V8_VERSION (
     set "REACTORUMG_V8_VERSION=v8_bin_9.4.146.24"
+)
+if not defined REACTORUMG_V8_VERSION_NAME (
+    set "REACTORUMG_V8_VERSION_NAME=v8_9.4.146.24"
+
 )
 if not defined REACTORUMG_V8_URL (
     set "REACTORUMG_V8_URL=https://github.com/puerts/backend-v8/releases/download/V8_9.4.146.24__241009/%REACTORUMG_V8_VERSION%.tgz"
 )
 
-set "V8_ARCHIVE=%TEMP%\%REACTORUMG_V8_VERSION%.zip"
-set "V8_TARGET_DIR=%THIRD_PARTY_DIR%\%REACTORUMG_V8_VERSION%"
+set "V8_ARCHIVE=%TEMP%\%REACTORUMG_V8_VERSION%.tgz"
+set "V8_TARGET_DIR=%THIRD_PARTY_DIR%\%REACTORUMG_V8_VERSION_NAME%"
 
 echo.
 echo === ReactorUMG Windows Setup ===
@@ -44,6 +58,8 @@ echo Checking local Node.js/npm/yarn environment...
 call :EnsureNode || exit /b 1
 call :EnsureNpm || exit /b 1
 call :EnsureYarn || exit /b 1
+
+pause
 
 if not exist "%THIRD_PARTY_DIR%" (
     echo Creating third-party directory at "%THIRD_PARTY_DIR%"
@@ -57,21 +73,29 @@ if not exist "%V8_TARGET_DIR%" (
     echo Downloading V8 engine package from:
     echo   %REACTORUMG_V8_URL%
     powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-        "try { Invoke-WebRequest -Uri '%REACTORUMG_V8_URL%' -OutFile '%V8_ARCHIVE%' -UseBasicParsing } catch { exit 1 }"
+        "try { Start-BitsTransfer -Source '%REACTORUMG_V8_URL%' -Destination '%V8_ARCHIVE%' } catch { exit 1 }"
+        @rem "try { Invoke-WebRequest -Uri '%REACTORUMG_V8_URL%' -OutFile '%V8_ARCHIVE%' -UseBasicParsing } catch { exit 1 }"
     if errorlevel 1 (
         echo Failed to download V8 archive. You can override the URL via REACTORUMG_V8_URL.
         exit /b 1
     )
 
+    echo v8 archive %V8_ARCHIVE%
+    pause
+
     echo Extracting V8 archive to "%THIRD_PARTY_DIR%"
     powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-        "try { Expand-Archive -Path '%V8_ARCHIVE%' -DestinationPath '%THIRD_PARTY_DIR%' -Force } catch { exit 1 }"
+        "try { tar -xzf '%V8_ARCHIVE%' -C '%THIRD_PARTY_DIR%' } catch { exit 1 }"
     if errorlevel 1 (
         echo Failed to extract V8 archive.
         exit /b 1
     )
+
+    pause
+
+    echo delete v8 archive
     del "%V8_ARCHIVE%" >nul 2>&1
-else (
+) else (
     echo V8 directory already present at "%V8_TARGET_DIR%"; skipping download.
 )
 
@@ -83,10 +107,12 @@ if not exist "%TYPE_SCRIPT_DIR%" (
     echo Creating TypeScript workspace in "%TYPE_SCRIPT_DIR%"
     robocopy "%TS_TEMPLATE_DIR%" "%TYPE_SCRIPT_DIR%" /E /NFL /NDL /NJH /NJS >nul
     set "ROBOEXIT=%ERRORLEVEL%"
-    if %ROBOEXIT% GEQ 8 (
-        echo Failed to copy TypeScript template (robocopy exit code %ROBOEXIT%).
-        exit /b %ROBOEXIT%
-    )
+    echo roboexit %ROBOEXIT%
+    pause
+    @REM if %ROBOEXIT% GEQ 1 (
+    @REM     echo Failed to copy TypeScript template (robocopy exit code %ROBOEXIT%).
+    @REM     exit /b %ROBOEXIT%
+    @REM )
 ) else (
     echo TypeScript workspace already exists at "%TYPE_SCRIPT_DIR%".
 )
@@ -123,6 +149,17 @@ if exist "%NODE_INSTALL_DIR%" (
         echo Using bundled Node.js located at "%NODE_INSTALL_DIR%".
         goto :EOF
     )
+)
+
+echo Node.js was not detected on this system.
+echo Do you want to automatically download and install a local Node.js for this project?
+@rem echo 现在未检测到 Node.js。是否为本项目自动下载安装本地 Node.js？
+choice /C YN /N /M "Install Node.js now? [Y/N]: "
+if errorlevel 2 (
+    echo You chose not to install Node.js.
+    echo Please install Node.js + npm + yarn manually, then re-run this script.
+    rem echo 你选择了不安装。请自行安装 Node.js + npm + yarn 环境后重新运行本脚本。
+    exit /b 1
 )
 
 call :InstallNode

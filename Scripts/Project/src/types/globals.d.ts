@@ -1,15 +1,15 @@
 ﻿declare module "*.module.css" {
-  const css: { [key: string]: string };
+  const css: { [key: string]: any };
   export default css;
 }
 
 declare module "*.css" {
-  const content: { [className: string]: string };
+  const content: { [className: string]: any };
   export default content;
 }
 
 declare module ".scss" {
-  const content: { [className: string]: string };
+  const content: { [className: string]: any };
   export default content;
 }
 
