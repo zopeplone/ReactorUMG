@@ -45,7 +45,6 @@ public class ReactorUMG : ModuleRules
 				"DeveloperSettings",
 				"JsEnv",
 				"SpinePlugin",
-				"Rive",
 				"HTTP",
 				"Json",
 				"JsonUtilities",

@@ -47,7 +47,7 @@ public class WasmCore : ModuleRules
 		
 		PrivateIncludePaths.AddRange(
 			new string[] {
-				"WasmCore/Private"
+				// "WasmCore/Private"
 				// ... add other private include paths required here ...
 			}
 			);

@@ -2,20 +2,23 @@
 
 #include "HttpModule.h"
 #include "Components/PanelSlot.h"
-#include "IRiveRendererModule.h"
 #include "LogReactorUMG.h"
 #include "ReactorUtils.h"
 #include "Engine/Engine.h"
 #include "Async/Async.h"
 #include "Engine/AssetManager.h"
 #include "Kismet/KismetRenderingLibrary.h"
-#include "Rive/RiveFile.h"
 #include "Engine/Font.h"
 #include "Engine/StreamableManager.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Blueprint/WidgetTree.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/Widget.h"
+
+#ifdef RIVE_SUPPORT
+#include "IRiveRendererModule.h"
+#include "Rive/RiveFile.h"
+#endif 
 
 UReactorUIWidget* UUMGManager::CreateReactWidget(UWorld* World)
 {
@@ -90,7 +93,7 @@ USpineSkeletonDataAsset* UUMGManager::LoadSpineSkeleton(UObject* Context, const 
 #endif
     return SkeletonDataAsset;
 }
-
+#ifdef RIVE_SUPPORT
 URiveFile* UUMGManager::LoadRiveFile(UObject* Context, const FString& RivePath, const FString& DirName)
 {
     if (!IRiveRendererModule::Get().GetRenderer())
@@ -156,6 +159,8 @@ URiveFile* UUMGManager::LoadRiveFile(UObject* Context, const FString& RivePath, 
     
     return RiveFile;
 }
+
+#endif
 
 UWorld* UUMGManager::GetCurrentWorld()
 {

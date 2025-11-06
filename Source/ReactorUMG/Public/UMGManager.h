@@ -15,7 +15,9 @@
 #include "GameFramework/PlayerController.h"
 #include "SpineSkeletonDataAsset.h"
 #include "SpineAtlasAsset.h"
+#ifdef RIVE_SUPPORT
 #include "Rive/RiveDescriptor.h"
+#endif
 #include "UMGManager.generated.h"
 
 DECLARE_DYNAMIC_DELEGATE(FEasyDelegate);
@@ -50,8 +52,8 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category="Widget|Spine")
 	static USpineAtlasAsset* LoadSpineAtlas(UObject* Context, const FString& AtlasPath, const FString& DirName);
 
-	UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category="Widget|Rive")
-	static URiveFile* LoadRiveFile(UObject* Context, const FString& RivePath, const FString& DirName);
+	// UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category="Widget|Rive")
+	// static URiveFile* LoadRiveFile(UObject* Context, const FString& RivePath, const FString& DirName);
 
 	UFUNCTION(BlueprintCallable, Category="Widget|ReactorUMG")
 	static UWorld* GetCurrentWorld();
