@@ -2,7 +2,10 @@
 
 ![](./docs/imgs/Cover.png)
 
-> **关键词**：Unreal Engine、UE5、UMG、UI、Slate、React、TypeScript、插件、热重载、实时预览、Puerts/PuertsTS、游戏 UI 框架  
+在虚幻引擎（Unreal Engine）中，允许您使用 **React** 开发 **UMG** 游戏UI和编辑器UI的辅助插件。  
+插件基于 **PuertTS** 脚本能力构建，结合 AI 辅助，让您能以Web前端的开发方式高效完成游戏UI和编辑器UI的研发与迭代。**特别适用于使用AI快速开发出编辑器下的各类UI工具。**
+
+> **关键词**：Unreal Engine、UE5、UMG、UI、Slate、React、TypeScript、插件、热重载、实时预览、Puerts
 >
 
 ⚠️ **当前为开发测试阶段（Alpha）**：API 与结构仍可能变化；稳定后将发布正式版本。
@@ -13,7 +16,6 @@
 
 <h2 id="767fa455">目录</h2>
 
-+ [项目简介](#uTCMj)
 + [为什么使用ReactorUMG](#ca757ae1)
 + [核心特性](#d2ffce75)
 + [系统要求](#19c93d0a)
@@ -26,11 +28,6 @@
 + [链接与资源](#477c63ed)
 
 ---
-
-<h2 id="uTCMj">项目简介</h2>
-
-在虚幻引擎（Unreal Engine）中，允许您使用 **React** 开发 **UMG** 游戏UI和编辑器UI的辅助插件。  
-插件基于 **PuertTS** 脚本能力构建，结合 AI 辅助，让您能以Web前端的开发方式高效完成游戏UI和编辑器UI的研发与迭代。**特别适用于使用AI快速开发出编辑器下的各类UI工具。**
 
 <h2 id="ca757ae1">为什么使用ReactorUMG</h2>
 
