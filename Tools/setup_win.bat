@@ -78,8 +78,8 @@ if not exist "%V8_TARGET_DIR%\\" (
     echo Downloading V8 engine package from:
     echo   %REACTORUMG_V8_URL%
     powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-        "try { Start-BitsTransfer -Source '%REACTORUMG_V8_URL%' -Destination '%V8_ARCHIVE%' } catch { exit 1 }"
-        @rem "try { Invoke-WebRequest -Uri '%REACTORUMG_V8_URL%' -OutFile '%V8_ARCHIVE%' -UseBasicParsing } catch { exit 1 }"
+		"try { Invoke-WebRequest -Uri '%REACTORUMG_V8_URL%' -OutFile '%V8_ARCHIVE%' -UseBasicParsing } catch { exit 1 }"
+        @rem "try { Start-BitsTransfer -Source '%REACTORUMG_V8_URL%' -Destination '%V8_ARCHIVE%' } catch { exit 1 }"
     if errorlevel 1 (
         echo Failed to download V8 archive. You can override the URL via REACTORUMG_V8_URL.
         exit /b 1
