@@ -375,8 +375,19 @@ FString UReactorUMGCommonBP::GetLaunchJsScriptPath(bool bForceFullPath)
 
 void UReactorUMGCommonBP::StartTsScriptsMonitor(TFunction<void()>&& Callback)
 {
+	auto GetDestFilePath = [this](const FString& SourceFilePath) -> FString
+	{
+		FString LeftDirs, RelativeFileName;
+		if (SourceFilePath.Split(TsScriptHomeRelativeDir, &LeftDirs, &RelativeFileName))
+		{
+			return FPaths::Combine(JSScriptContentDir, TsScriptHomeRelativeDir, RelativeFileName);
+		}
+
+		return SourceFilePath;
+	};
+
 	TsProjectMonitor.Watch(TsScriptHomeFullDir);
-	TsMonitorDelegateHandle = TsProjectMonitor.OnDirectoryChanged().AddLambda([this, CallbackTemp = MoveTemp(Callback)](
+	TsMonitorDelegateHandle = TsProjectMonitor.OnDirectoryChanged().AddLambda([this, GetDestFilePath, CallbackTemp = MoveTemp(Callback)](
 			const TArray<FString>& Added, const TArray<FString>& Modified, const TArray<FString>& Removed
 		)
 	{
@@ -386,17 +397,6 @@ void UReactorUMGCommonBP::StartTsScriptsMonitor(TFunction<void()>&& Callback)
 			// SetupTsScripts(true, true);
 
 			CallbackTemp();
-
-			auto GetDestFilePath = [this](const FString& SourceFilePath) -> FString
-			{
-				FString LeftDirs, RelativeFileName;
-				if (SourceFilePath.Split(TsScriptHomeRelativeDir, &LeftDirs, &RelativeFileName))
-				{
-					return FPaths::Combine(JSScriptContentDir, TsScriptHomeRelativeDir, RelativeFileName);
-				}
-
-				return SourceFilePath;
-			};
 
 			for (const auto& AddFile : Added)
 			{
@@ -434,6 +434,21 @@ void UReactorUMGCommonBP::StartTsScriptsMonitor(TFunction<void()>&& Callback)
 			}
 		}
 	});
+
+	// Initial sync: copy all non-ts/tsx files under TsScriptHomeFullDir to destination
+	{
+		TArray<FString> AllFiles;
+		IFileManager::Get().FindFilesRecursive(AllFiles, *TsScriptHomeFullDir, TEXT("*"), true, false, false);
+		for (const FString& SrcPath : AllFiles)
+		{
+			if (SrcPath.EndsWith(TEXT(".ts")) || SrcPath.EndsWith(TEXT(".tsx")))
+			{
+				continue;
+			}
+			const FString DestPath = GetDestFilePath(SrcPath);
+			FReactorUtils::CopyFile(SrcPath, DestPath);
+		}
+	}
 }
 
 void UReactorUMGCommonBP::BuildAllNeedPaths(const FString& InWidgetName, const FString& WidgetPath, const FString& HomePrefix)
