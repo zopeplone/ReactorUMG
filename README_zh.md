@@ -113,7 +113,7 @@
 
 1. 建议遵循UE的资产命名，为ReactorUMG的字母缩写**RW_XXX（运行时UI），ERW_XXX（编辑器UI）**。
 
-更多详细内容请参考文档：
+更多详细内容请参考文档：https://caleb196x.github.io/ReactorUMGOnlineDoc/
 
 ---
 
