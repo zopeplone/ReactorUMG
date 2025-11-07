@@ -240,6 +240,22 @@ void UReactorUMGCommonBP::SetupTsScripts(const FReactorUMGCompilerLog& CompilerR
 			CompileErrorReporter->CompileReportDelegate.BindDynamic(this, &UReactorUMGCommonBP::ReportToMessageLog);
 		}
 	}
+
+	
+	// Initial sync: copy all non-ts/tsx files under TsScriptHomeFullDir to destination
+	{
+		TArray<FString> AllFiles;
+		IFileManager::Get().FindFilesRecursive(AllFiles, *TsScriptHomeFullDir, TEXT("*"), true, false, false);
+		for (const FString& SrcPath : AllFiles)
+		{
+			if (SrcPath.EndsWith(TEXT(".ts")) || SrcPath.EndsWith(TEXT(".tsx")))
+			{
+				continue;
+			}
+			const FString DestPath = GetDestFilePath(SrcPath);
+			FReactorUtils::CopyFile(SrcPath, DestPath);
+		}
+	}
 	
 	if (CheckLaunchJsScriptExist())
 	{
@@ -371,6 +387,17 @@ FString UReactorUMGCommonBP::GetLaunchJsScriptPath(bool bForceFullPath)
 	{
 		return FPaths::Combine( TsScriptHomeRelativeDir, TEXT("launch"));
 	}
+}
+
+FString UReactorUMGCommonBP::GetDestFilePath(const FString& SourceFilePath) const
+{
+	FString LeftDirs, RelativeFileName;
+	if (SourceFilePath.Split(TsScriptHomeRelativeDir, &LeftDirs, &RelativeFileName))
+	{
+		return FPaths::Combine(JSScriptContentDir, TsScriptHomeRelativeDir, RelativeFileName);
+	}
+
+	return SourceFilePath;
 }
 
 void UReactorUMGCommonBP::StartTsScriptsMonitor(TFunction<void()>&& Callback)

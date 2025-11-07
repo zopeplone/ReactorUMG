@@ -80,6 +80,7 @@ public:
 	void StartTsScriptsMonitor(TFunction<void()>&& MarkBPDirtyCallback);
 	void BuildAllNeedPaths(const FString& InWidgetName, const FString& WidgetPath, const FString& HomePrefix = TEXT(""));
 	void DeleteRelativeDirectories(const FAssetData& AssetData, const FName& BPName, const FString& BPPath);
+	FString GetDestFilePath(const FString& SourceFilePath) const;
 	
 	UFUNCTION(BlueprintCallable)
 	FString GetTsProjectDir() const { return TsProjectDir; }
