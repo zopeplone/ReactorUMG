@@ -107,8 +107,8 @@ Standard Node.js setup. Yarn is recommended as the package manager.
   <img src="./docs/imgs/startup_editor_preview.png" alt="Editor Preview" width="420">
 
 > **Naming Tip:** Use `RW_`* for runtime UI and `ERW_`* for editor UI.
-> For more information, see the project documentation. https://caleb196x.github.io/ReactorUMGOnlineDoc/
 
+For more information, see the project documentation. https://caleb196x.github.io/ReactorUMGOnlineDoc/
 ---
 
 ## Project Layout Example
