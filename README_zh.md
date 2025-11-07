@@ -79,6 +79,7 @@
 
 <h3 id="iLatG">启用插件</h3>
 
++ 启动UE项目，如果您使用的是源码版，您还需要编译插件代码。
 + 打开 UE → `Edit > Plugins` 搜索 **ReactorUMG** → 勾选启用 → 按需重启编辑器。
 
 <h3 id="vzBuB">创建 UI</h3>
