@@ -87,7 +87,7 @@ void FDirectoryMonitor::UnWatch()
 }
 
 
-void UReactorUMGCommonBP::RenameScriptDir(const TCHAR* NewName, UObject* NewOuter)
+void UReactorUMGCommonBP::RenameScriptDir(const TCHAR* NewName, UObject* NewOuter, const FString& HomePrefix)
 {
 	if (NewName == nullptr)
 	{
@@ -103,9 +103,20 @@ void UReactorUMGCommonBP::RenameScriptDir(const TCHAR* NewName, UObject* NewOute
 	
 	const FString WidgetBPPathName = NewOuter->GetPathName();
 	const FString ProjectName = FApp::GetProjectName();
+	const FString BlueprintPathSuffix = WidgetBPPathName.Mid(5);
 	
-	const FString NewWidgetRelativePath = TEXT("src/") + ProjectName + WidgetBPPathName.Mid(5);
-	const FString NewTsScriptHomeFullDir = FPaths::Combine(FReactorUtils::GetGamePlayTSHomeDir(), WidgetBPPathName.Mid(5) /* 排除/Game */);
+	FString NewWidgetRelativePath;
+	FString NewTsScriptHomeFullDir;
+	if (HomePrefix.IsEmpty())
+	{
+		NewWidgetRelativePath = TEXT("src/") + ProjectName + BlueprintPathSuffix;
+		NewTsScriptHomeFullDir = FPaths::Combine(FReactorUtils::GetGamePlayTSHomeDir(), BlueprintPathSuffix);
+	}
+	else
+	{
+		NewWidgetRelativePath = FString::Printf(TEXT("src/%s/%s%s"), *ProjectName, *HomePrefix, *BlueprintPathSuffix);
+		NewTsScriptHomeFullDir = FPaths::Combine(FReactorUtils::GetGamePlayTSHomeDir(), HomePrefix, BlueprintPathSuffix);
+	}
 	
 	const FString OldTsScriptHomeDirFullPath = TsScriptHomeFullDir;
 	const FString OldJsScriptHomeDirFullPath = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("JavaScript"), TsScriptHomeRelativeDir);

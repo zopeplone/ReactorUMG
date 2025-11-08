@@ -45,7 +45,7 @@ bool UReactorUMGUtilityWidgetBlueprint::Rename(const TCHAR* NewName, UObject* Ne
 	bool Res = Super::Rename(NewName, NewOuter, Flags);
 	if (ReactorUMGCommonBP)
 	{
-		ReactorUMGCommonBP->RenameScriptDir(NewName, NewOuter);
+		ReactorUMGCommonBP->RenameScriptDir(NewName, NewOuter, TEXT("Editor"));
 		ReactorUMGCommonBP->WidgetName = FString(NewName);
 	}
 	

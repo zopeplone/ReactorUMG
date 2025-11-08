@@ -76,7 +76,7 @@ public:
 	void ReloadJsScripts();
 	void ExecuteJsScripts();
 	void CompileTsScript();
-	void RenameScriptDir(const TCHAR* NewName, UObject* NewOuter);
+	void RenameScriptDir(const TCHAR* NewName, UObject* NewOuter, const FString& HomePrefix = TEXT(""));
 	void StartTsScriptsMonitor(TFunction<void()>&& MarkBPDirtyCallback);
 	void BuildAllNeedPaths(const FString& InWidgetName, const FString& WidgetPath, const FString& HomePrefix = TEXT(""));
 	void DeleteRelativeDirectories(const FAssetData& AssetData, const FName& BPName, const FString& BPPath);
