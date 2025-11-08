@@ -156,11 +156,15 @@ export function parseScale(scale: string): UE.Vector2D {
         return new UE.Vector2D(1, 1);
     }
 
-    const scaleValues = scale.split(" ").map(Number);
-    if (scaleValues.length === 1) {
-        return new UE.Vector2D(scaleValues[0], scaleValues[0]);
-    } else if (scaleValues.length === 2) {
-        return new UE.Vector2D(scaleValues[0], scaleValues[1]);
+    if (typeof scale == "number") {
+        return new UE.Vector2D(scale, scale);
+    } else if (typeof scale == "string") {
+        const scaleValues = scale.split(" ").map(Number);
+        if (scaleValues.length === 1) {
+            return new UE.Vector2D(scaleValues[0], scaleValues[0]);
+        } else if (scaleValues.length === 2) {
+            return new UE.Vector2D(scaleValues[0], scaleValues[1]);
+        }
     }
 
     return new UE.Vector2D(1, 1);

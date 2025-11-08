@@ -8,6 +8,8 @@ export class CanvasConverter extends ContainerConverter {
     private predefinedAnchors: Record<string, any>;
     private childInfo: Map<UE.Widget, { typeName: string; props: any }>;
     private childCanvasSlot: Map<UE.Widget, UE.CanvasPanelSlot>;
+    private containerWidthRef: number = 0;
+    private containerHeightRef: number = 0;
     constructor(typeName: string, props: any, outer: any) {
         super(typeName, props, outer);
         this.childInfo = new Map();
@@ -48,6 +50,8 @@ export class CanvasConverter extends ContainerConverter {
     
     createNativeWidget(): UE.Widget {
         const widget = new UE.CanvasPanel(this.outer);
+        // Prepare container reference size for % units on children
+        this.updateContainerRefSize(this.containerStyle);
         return widget;
     }
 
@@ -55,6 +59,8 @@ export class CanvasConverter extends ContainerConverter {
         const mergedProps = { ...oldProps, ...changedProps };
         this.props = mergedProps;
         this.containerStyle = getAllStyles(this.typeName, mergedProps);
+        // Update container reference size when container size-related styles change
+        this.updateContainerRefSize(this.containerStyle);
 
         const panel = widget as UE.CanvasPanel;
         if (!panel || !(panel as any).GetChildrenCount) return;
@@ -88,8 +94,9 @@ export class CanvasConverter extends ContainerConverter {
     private initCanvasSlot(canvasSlot: UE.CanvasPanelSlot, childStyle: any): void {
         if (!canvasSlot) return;
 
-        const positionAnchor = this.containerStyle?.positionAnchor;
-        const offsetAnchor = this.containerStyle?.offsetAnchor;
+        // child can override container anchor settings
+        const positionAnchor = childStyle?.positionAnchor ?? this.containerStyle?.positionAnchor;
+        const offsetAnchor = childStyle?.offsetAnchor ?? this.containerStyle?.offsetAnchor;
 
         const width = childStyle?.width || 'none';
         const height = childStyle?.height || 'none';
@@ -100,17 +107,16 @@ export class CanvasConverter extends ContainerConverter {
         let positionAnchors: any = null;
         if (positionAnchor) {
             positionAnchors = this.predefinedAnchors[positionAnchor];
-
         } else if (offsetAnchor) {
             positionAnchors = this.predefinedAnchors[offsetAnchor];
         }
 
-        if (positionAnchors) {
-            canvasSlot.SetAnchors(new UE.Anchors(new UE.Vector2D(positionAnchors.min_x, positionAnchors.min_y), 
-                                                new UE.Vector2D(positionAnchors.max_x, positionAnchors.max_y)));
-        } else {
-            canvasSlot.SetAnchors(new UE.Anchors(new UE.Vector2D(0, 0), new UE.Vector2D(0, 0)));
-        }
+        // default to absolute (top-left) when not specified
+        const anchors = positionAnchors ?? {min_x: 0, min_y: 0, max_x: 0, max_y: 0};
+        canvasSlot.SetAnchors(new UE.Anchors(
+            new UE.Vector2D(anchors.min_x, anchors.min_y),
+            new UE.Vector2D(anchors.max_x, anchors.max_y)
+        ));
 
         // loction
         const top = childStyle?.top || '0px';
@@ -118,23 +124,29 @@ export class CanvasConverter extends ContainerConverter {
         const right = childStyle?.right || '0px';
         const bottom = childStyle?.bottom || '0px';
 
-        const topSU = convertLengthUnitToSlateUnit(top, childStyle);
-        const leftSU = convertLengthUnitToSlateUnit(left, childStyle);
-        if (!(positionAnchor?.includes('fill')) || !(positionAnchor?.includes('span-all'))) {
-            canvasSlot.SetPosition(new UE.Vector2D(leftSU, topSU));
-        } else {
-            const rightSU = convertLengthUnitToSlateUnit(right, childStyle);
-            const bottomSU = convertLengthUnitToSlateUnit(bottom, childStyle);
+        const topSU = convertLengthUnitToSlateUnit(top, childStyle, this.containerHeightRef);
+        const leftSU = convertLengthUnitToSlateUnit(left, childStyle, this.containerWidthRef);
+        const rightSU = convertLengthUnitToSlateUnit(right, childStyle, this.containerWidthRef);
+        const bottomSU = convertLengthUnitToSlateUnit(bottom, childStyle, this.containerHeightRef);
+
+        const isStretchedX = anchors.min_x !== anchors.max_x;
+        const isStretchedY = anchors.min_y !== anchors.max_y;
+
+        if (isStretchedX || isStretchedY) {
+            // When stretched, offsets define distances to each anchor edge
             canvasSlot.SetOffsets(new UE.Margin(leftSU, topSU, rightSU, bottomSU));
+        } else {
+            // Non-stretched: absolute position + explicit size or autosize
+            canvasSlot.SetPosition(new UE.Vector2D(leftSU, topSU));
         }
         
-        if (width !== 'none' && height !== 'none') {
-            const widthSU = convertLengthUnitToSlateUnit(width, childStyle);
-            const heightSU = convertLengthUnitToSlateUnit(height, childStyle);
+        if (!isStretchedX && !isStretchedY && width !== 'none' && height !== 'none') {
+            const widthSU = convertLengthUnitToSlateUnit(width, childStyle, this.containerWidthRef);
+            const heightSU = convertLengthUnitToSlateUnit(height, childStyle, this.containerHeightRef);
             canvasSlot.SetSize(new UE.Vector2D(widthSU * scale, heightSU * scale));
-        } else if (width !== 'none' && height === 'none') {
+        } else if (!isStretchedX && !isStretchedY && width !== 'none' && height === 'none') {
 
-            const widthSU = convertLengthUnitToSlateUnit(width, childStyle);
+            const widthSU = convertLengthUnitToSlateUnit(width, childStyle, this.containerWidthRef);
             if (aspectRatio !== 'auto') {
                 const desiredHeight = widthSU / parseAspectRatio(aspectRatio);
                 canvasSlot.SetSize(new UE.Vector2D(widthSU * scale, desiredHeight * scale));
@@ -142,9 +154,9 @@ export class CanvasConverter extends ContainerConverter {
                 canvasSlot.SetSize(new UE.Vector2D(widthSU * scale, widthSU * scale));
             }
 
-        } else if (height !== 'none' && width === 'none') {
+        } else if (!isStretchedX && !isStretchedY && height !== 'none' && width === 'none') {
 
-            const heightSU = convertLengthUnitToSlateUnit(height, childStyle);
+            const heightSU = convertLengthUnitToSlateUnit(height, childStyle, this.containerHeightRef);
             if (aspectRatio !== 'auto') {
                 const desiredWidth = heightSU * parseAspectRatio(aspectRatio);
                 canvasSlot.SetSize(new UE.Vector2D(desiredWidth * scale, heightSU * scale));
@@ -152,11 +164,56 @@ export class CanvasConverter extends ContainerConverter {
                 canvasSlot.SetSize(new UE.Vector2D(heightSU * scale, heightSU * scale));
             }
 
-        } else {
+        } else if (!isStretchedX && !isStretchedY) {
             canvasSlot.SetAutoSize(true);
         }
 
+        // optional: per-child alignment (pivot) within the slot
+        // supports: anchorAlign: "left|center|right top|center|bottom" or anchorPivot: "x y"
+        const parseAlignToken = (t: string): number => {
+            const v = t.toLowerCase();
+            if (v === 'left' || v === 'top' || v === 'start') return 0;
+            if (v === 'center' || v === 'middle') return 0.5;
+            if (v === 'right' || v === 'bottom' || v === 'end') return 1;
+            const n = parseFloat(v);
+            if (!isNaN(n)) return Math.min(1, Math.max(0, n));
+            return 0.5;
+        };
+
+        const anchorAlign = childStyle?.anchorAlign as string | undefined;
+        const anchorPivot = childStyle?.anchorPivot as string | undefined;
+        if (anchorAlign) {
+            const parts = anchorAlign.trim().split(/\s+/);
+            const h = parseAlignToken(parts[0] ?? 'center');
+            const v = parseAlignToken(parts[1] ?? 'center');
+            canvasSlot.SetAlignment(new UE.Vector2D(h, v));
+        } else if (anchorPivot) {
+            const parts = anchorPivot.trim().split(/\s+/);
+            const h = parseAlignToken(parts[0] ?? '0.5');
+            const v = parseAlignToken(parts[1] ?? '0.5');
+            canvasSlot.SetAlignment(new UE.Vector2D(h, v));
+        }
+
+        // z-index mapping
+        const zIndex = ((): number | null => {
+            if (childStyle?.zOrder !== undefined) return parseInt(childStyle.zOrder);
+            if (childStyle?.zIndex !== undefined) return parseInt(childStyle.zIndex);
+            return null;
+        })();
+        if (zIndex !== null && !isNaN(zIndex)) {
+            canvasSlot.SetZOrder(zIndex);
+        }
+
         this.initChildPadding(canvasSlot, childStyle);
+    }
+
+    private updateContainerRefSize(style: any) {
+        if (!style) { this.containerWidthRef = 0; this.containerHeightRef = 0; return; }
+        const w = style?.width;
+        const h = style?.height;
+        // Only resolve to absolute Slate units if not 'auto'
+        this.containerWidthRef = (w && w !== 'auto') ? convertLengthUnitToSlateUnit(w, style) : 0;
+        this.containerHeightRef = (h && h !== 'auto') ? convertLengthUnitToSlateUnit(h, style) : 0;
     }
     appendChild(parent: UE.Widget, child: UE.Widget, childTypeName: string, childProps: any): void {
         let canvasPanel = parent as UE.CanvasPanel;
