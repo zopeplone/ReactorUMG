@@ -78,14 +78,18 @@ void UReactorUtilityWidget::RunScriptToInitWidgetTree()
 {
 	if (UJsBridgeCaller::IsExistBridgeCaller(LaunchScriptPath))
 	{
-		const bool DelegateRunResult = UJsBridgeCaller::ExecuteMainCaller(LaunchScriptPath, this->WidgetTree);
-		if (!DelegateRunResult)
-		{
-			UJsBridgeCaller::RemoveBridgeCaller(LaunchScriptPath);
-			ReleaseJsEnv();
-			UE_LOG(LogReactorUMG, Warning, TEXT("Not bind any bridge caller for %s"), *LaunchScriptPath);
-		}
-	} else if (!LaunchScriptPath.IsEmpty())
+		// const bool DelegateRunResult = UJsBridgeCaller::ExecuteMainCaller(LaunchScriptPath, this->WidgetTree);
+		// if (!DelegateRunResult)
+		// {
+		// 	UJsBridgeCaller::RemoveBridgeCaller(LaunchScriptPath);
+		// 	ReleaseJsEnv();
+		// 	UE_LOG(LogReactorUMG, Warning, TEXT("Not bind any bridge caller for %s"), *LaunchScriptPath);
+		// }
+		UJsBridgeCaller::RemoveBridgeCaller(LaunchScriptPath);
+		UE_LOG(LogReactorUMG, Display, TEXT("Remove bridge caller for %s"), *LaunchScriptPath);
+	}
+
+	if (!LaunchScriptPath.IsEmpty())
 	{
 		TArray<TPair<FString, UObject*>> Arguments;
 		UJsBridgeCaller* Caller = UJsBridgeCaller::AddNewBridgeCaller(LaunchScriptPath);
