@@ -243,7 +243,7 @@ export class FlexConverter extends ContainerConverter {
         slot.SetPadding(currentPadding);
     }
 
-    private configureWrapBox(wrapBox: UE.WrapBox): void {
+    private configureWrapBox(wrapBox: UE.WrapBox, update?: boolean): void {
         wrapBox.Orientation = this.isRow
             ? UE.EOrientation.Orient_Horizontal
             : UE.EOrientation.Orient_Vertical;
@@ -251,13 +251,17 @@ export class FlexConverter extends ContainerConverter {
         const paddingX = this.isRow ? (this.mainAxisGap || 0) : (this.crossAxisGap || 0);
         const paddingY = this.isRow ? (this.crossAxisGap || 0) : (this.mainAxisGap || 0);
         wrapBox.SetInnerSlotPadding(new UE.Vector2D(paddingX, paddingY));
+        if (!update)
+            wrapBox.SetHorizontalAlignment(UE.EHorizontalAlignment.HAlign_Fill);
 
         if (this.isRow) {
             wrapBox.FlowDirectionPreference = this.isReverse
                 ? UE.EFlowDirectionPreference.RightToLeft
                 : UE.EFlowDirectionPreference.LeftToRight;
-            UE.UMGManager.SynchronizeWidgetProperties(wrapBox);
         }
+
+        // Always sync after mutating wrapBox properties so changes take effect consistently
+        UE.UMGManager.SynchronizeWidgetProperties(wrapBox);
     }
 
     createNativeWidget(): UE.Widget {
@@ -289,7 +293,7 @@ export class FlexConverter extends ContainerConverter {
         this.computeGapValues();
 
         if (widget instanceof UE.WrapBox) {
-            this.configureWrapBox(widget as UE.WrapBox);
+            this.configureWrapBox(widget as UE.WrapBox, true);
         } else if (widget instanceof UE.HorizontalBox) {
             widget.FlowDirectionPreference = this.isReverse
                 ? UE.EFlowDirectionPreference.RightToLeft

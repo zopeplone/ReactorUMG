@@ -340,10 +340,10 @@ export class TextConverter extends JSXConverter {
 
         } else if (widget instanceof UE.TextBlock) {
             const text = widget as UE.TextBlock;
-            this.setupTextBlockProperties(text, _changedProps);
+            // this.setupTextBlockProperties(text, _changedProps);
             const content = this.extractTextContent(_changedProps);
             this.applyTextContent(text, content);
-            UE.UMGManager.SynchronizeWidgetProperties(text);
+            // UE.UMGManager.SynchronizeWidgetProperties(text);
         }
     }
 

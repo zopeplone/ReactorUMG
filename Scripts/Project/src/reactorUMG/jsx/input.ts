@@ -6,6 +6,7 @@ import { compareTwoFunctions } from '../misc/utils';
 export class InputJSXConverter extends JSXConverter {
     private isCheckbox: boolean;
     private isSlider: boolean;
+    private isRadio: boolean;
     private checkboxChangeCallback: (isChecked: boolean) => void;
     private textChangeCallback: (text: string) => void;
 
@@ -14,11 +15,14 @@ export class InputJSXConverter extends JSXConverter {
 
     private lastEditTextOnChangeFunc: Function;
     private lastCheckOnChangeFunc: Function;
+    private radioInternalUpdate: boolean;
 
     constructor(typeName: string, props: any, outer: any) {
         super(typeName, props, outer);
         this.isCheckbox = false;
         this.isSlider = false;
+        this.isRadio = false;
+        this.radioInternalUpdate = false;
     }
 
     private updateTextChangeHandle(widget: UE.EditableText, onChange: Function) {
@@ -71,6 +75,70 @@ export class InputJSXConverter extends JSXConverter {
         }
         // set checkbox style
         // umg checkbox to more styles
+    }
+
+    private updateRadioChange(widget: UE.CheckBox, onChange: Function) {
+        const onCheckChangeSame: boolean = compareTwoFunctions(this.lastCheckOnChangeFunc, onChange);
+        if (onCheckChangeSame) return;
+
+        if (this.checkboxChangeCallback) {
+            widget.OnCheckStateChanged.Remove(this.checkboxChangeCallback);
+        }
+
+        this.checkboxChangeCallback = (isChecked: boolean) => {
+            // Prevent recursion for internal resets
+            if (this.radioInternalUpdate) {
+                this.radioInternalUpdate = false;
+                return;
+            }
+            if (isChecked) {
+                onChange({ target: { name: this.props.name, type: 'radio', checked: true } });
+            } else {
+                // Radio cannot be unchecked by clicking itself; re-check it
+                this.radioInternalUpdate = true;
+                widget.SetIsChecked(true);
+            }
+        };
+        widget.OnCheckStateChanged.Add(this.checkboxChangeCallback);
+        this.lastCheckOnChangeFunc = onChange;
+    }
+
+    private setupRadioChange(widget: UE.CheckBox, onChange: Function) {
+        this.checkboxChangeCallback = (isChecked: boolean) => {
+            if (this.radioInternalUpdate) {
+                this.radioInternalUpdate = false;
+                return;
+            }
+            if (isChecked) {
+                onChange({ target: { name: this.props.name, type: 'radio', checked: true } });
+            } else {
+                this.radioInternalUpdate = true;
+                widget.SetIsChecked(true);
+            }
+        };
+        widget.OnCheckStateChanged.Add(this.checkboxChangeCallback);
+        this.lastCheckOnChangeFunc = onChange;
+    }
+
+    private setupRadio(widget: UE.CheckBox, props: any, isUpdate: boolean) {
+        const { checked, onChange } = props;
+
+        // Force standard checkbox type (visual styling can be provided via UMG styles if available)
+        if (widget.WidgetStyle) {
+            widget.WidgetStyle.CheckBoxType = UE.ESlateCheckBoxType.CheckBox;
+        }
+
+        if (checked) widget.SetIsChecked(true);
+        else widget.SetIsChecked(false);
+
+        // For radios, clicking an already-checked control should not uncheck it.
+        if (typeof onChange === 'function') {
+            if (isUpdate) {
+                this.updateRadioChange(widget, onChange);
+            } else {
+                this.setupRadioChange(widget, onChange);
+            }
+        }
     }
 
     private setupEditableText(widget: UE.EditableText, props: any, isUpdate: boolean) {
@@ -150,9 +218,16 @@ export class InputJSXConverter extends JSXConverter {
             widget = new UE.CheckBox(this.outer);
             this.setupCheckbox(widget as UE.CheckBox, this.props, false);
             this.isCheckbox = true;
+            this.isRadio = false;
+        } else if (inputType === 'radio') {
+            widget = new UE.CheckBox(this.outer);
+            this.setupRadio(widget as UE.CheckBox, this.props, false);
+            this.isRadio = true;
+            this.isCheckbox = false;
         } else if (inputType === "range") {
             widget = new UE.Slider(this.outer);
             this.setupSlider(widget as UE.Slider, this.props, false);
+            this.isSlider = true;
         } else {
             widget = new UE.EditableText(this.outer);
             if (inputType === 'password') {
@@ -167,6 +242,10 @@ export class InputJSXConverter extends JSXConverter {
     update(widget: UE.Widget, oldProps: any, changedProps: any): void {
         if (this.isCheckbox) {
             this.setupCheckbox(widget as UE.CheckBox, changedProps, true);
+        } else if (this.isRadio) {
+            this.setupRadio(widget as UE.CheckBox, changedProps, true);
+        } else if (this.isSlider){
+            this.setupSlider(widget as UE.Slider, changedProps, true);
         } else {
             this.setupEditableText(widget as UE.EditableText, changedProps, true);
         }
