@@ -14,7 +14,6 @@ export abstract class ElementConverter {
         this.typeName = typeName;
         this.props = props;
         this.outer = outer;
-
         
         this.PropMaps = {
             "Cursor": "cursor",

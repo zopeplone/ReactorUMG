@@ -327,9 +327,12 @@ export class ButtonConverter extends JSXConverter {
             return;
         }
 
+        // Always remove the old handler before adding a new one to avoid stale closures and duplicates
         this.removeSingleEventHandler(button, propName);
-        button[eventName].Add(handler);
-        this.eventCallbacks[propName] = handler;
+
+        const wrapper = () => handler();
+        this.eventCallbacks[propName] = wrapper;
+        button[eventName].Add(wrapper);
     }
 
     private initButtonDefaultProps(button: UE.Button) {

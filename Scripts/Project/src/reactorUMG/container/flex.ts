@@ -13,6 +13,7 @@ export class FlexConverter extends ContainerConverter {
     private isWrap: boolean;
     private mainAxisGap: number;
     private crossAxisGap: number;
+    private boxWidgetWhenUsingWrapbox: UE.Widget;
 
     constructor(typeName: string, props: any, outer: any) {
         super(typeName, props, outer);
@@ -202,6 +203,10 @@ export class FlexConverter extends ContainerConverter {
     private applyFlexSizingToSlot(slot: UE.PanelSlot, childStyle: any): void {
         const flexGrowValue = this.getFlexGrowValue(childStyle);
         if (flexGrowValue === null || isNaN(flexGrowValue)) {
+            if (slot instanceof UE.HorizontalBoxSlot) {
+                slot.SetSize(new UE.SlateChildSize(1, UE.ESlateSizeRule.Fill));
+            }
+
             return;
         }
 
@@ -251,8 +256,8 @@ export class FlexConverter extends ContainerConverter {
         const paddingX = this.isRow ? (this.mainAxisGap || 0) : (this.crossAxisGap || 0);
         const paddingY = this.isRow ? (this.crossAxisGap || 0) : (this.mainAxisGap || 0);
         wrapBox.SetInnerSlotPadding(new UE.Vector2D(paddingX, paddingY));
-        if (!update)
-            wrapBox.SetHorizontalAlignment(UE.EHorizontalAlignment.HAlign_Fill);
+        // if (!update)
+        //     wrapBox.SetHorizontalAlignment(UE.EHorizontalAlignment.HAlign_Fill);
 
         if (this.isRow) {
             wrapBox.FlowDirectionPreference = this.isReverse
@@ -265,6 +270,7 @@ export class FlexConverter extends ContainerConverter {
     }
 
     createNativeWidget(): UE.Widget {
+
         if (this.isWrap) {
             const wrapBox = new UE.WrapBox(this.outer);
             this.configureWrapBox(wrapBox);
@@ -276,10 +282,17 @@ export class FlexConverter extends ContainerConverter {
             widget.FlowDirectionPreference = this.isReverse
                 ? UE.EFlowDirectionPreference.RightToLeft
                 : UE.EFlowDirectionPreference.LeftToRight;
-            UE.UMGManager.SynchronizeWidgetProperties(widget);
         } else if (this.isReverse) {
             // todo: column-reverse requires manual child order adjustments when appending/removing children
         }
+
+        // if (this.isWrap) {
+        //     const wrapBox = new UE.WrapBox(this.outer);
+        //     this.configureWrapBox(wrapBox);
+        //     wrapBox.AddChildToWrapBox(widget);
+        //     this.boxWidgetWhenUsingWrapbox = widget;
+        //     return wrapBox;
+        // }
 
         return widget;
     }
@@ -309,13 +322,15 @@ export class FlexConverter extends ContainerConverter {
         const panelParent = parent as UE.PanelWidget;
         const existingCount = panelParent ? panelParent.GetChildrenCount() : 0;
 
-        if (parent instanceof UE.WrapBox) {
+        // && this.boxWidgetWhenUsingWrapbox
+        if (parent instanceof UE.WrapBox ) {
             const wrapBox = parent as UE.WrapBox;
             const wrapSlot = wrapBox.AddChildToWrapBox(child);
             this.initWrapBoxSlot(wrapSlot, childStyle);
             super.initChildPadding(wrapSlot, childStyle);
             this.applyFlexSizingToSlot(wrapSlot, childStyle);
             return;
+            // parent = this.boxWidgetWhenUsingWrapbox;
         }
 
         if (parent instanceof UE.HorizontalBox) {

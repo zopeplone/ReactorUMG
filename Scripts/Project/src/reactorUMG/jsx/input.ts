@@ -4,6 +4,7 @@ import { getAllStyles } from '../parsers/cssstyle_parser';
 import { hasFontStyles, setupFontStyles } from '../parsers/css_font_parser';
 import { compareTwoFunctions } from '../misc/utils';
 export class InputJSXConverter extends JSXConverter {
+    private static readonly DEFAULT_SLIDER_WIDTH = 240;
     private isCheckbox: boolean;
     private isSlider: boolean;
     private isRadio: boolean;
@@ -15,7 +16,10 @@ export class InputJSXConverter extends JSXConverter {
 
     private lastEditTextOnChangeFunc: Function;
     private lastCheckOnChangeFunc: Function;
+    private lastRadioOnChangeFunc: Function;
     private radioInternalUpdate: boolean;
+    private sliderWidget?: UE.Slider;
+    private sliderWrapper?: UE.SizeBox;
 
     constructor(typeName: string, props: any, outer: any) {
         super(typeName, props, outer);
@@ -26,8 +30,8 @@ export class InputJSXConverter extends JSXConverter {
     }
 
     private updateTextChangeHandle(widget: UE.EditableText, onChange: Function) {
-        const onChangeFuncSame: boolean = compareTwoFunctions(this.lastEditTextOnChangeFunc, onChange);
-        if (onChangeFuncSame) return;
+        // const onChangeFuncSame: boolean = compareTwoFunctions(this.lastEditTextOnChangeFunc, onChange);
+        // if (onChangeFuncSame) return;
 
         if (this.textChangeCallback) {
             widget.OnTextChanged.Remove(this.textChangeCallback);
@@ -45,8 +49,8 @@ export class InputJSXConverter extends JSXConverter {
     }
 
     private updateCheckboxChange(widget: UE.CheckBox, onChange: Function) {
-        const onCheckChangeSame: boolean = compareTwoFunctions(this.lastCheckOnChangeFunc, onChange);
-        if (onCheckChangeSame) return;
+        // const onCheckChangeSame: boolean = compareTwoFunctions(this.lastCheckOnChangeFunc, onChange);
+        // if (onCheckChangeSame) return;
 
         if (this.checkboxChangeCallback) {
             widget.OnCheckStateChanged.Remove(this.checkboxChangeCallback);
@@ -78,8 +82,8 @@ export class InputJSXConverter extends JSXConverter {
     }
 
     private updateRadioChange(widget: UE.CheckBox, onChange: Function) {
-        const onCheckChangeSame: boolean = compareTwoFunctions(this.lastCheckOnChangeFunc, onChange);
-        if (onCheckChangeSame) return;
+        // const onCheckChangeSame: boolean = compareTwoFunctions(this.lastRadioOnChangeFunc, onChange);
+        // if (onCheckChangeSame) return;
 
         if (this.checkboxChangeCallback) {
             widget.OnCheckStateChanged.Remove(this.checkboxChangeCallback);
@@ -100,7 +104,7 @@ export class InputJSXConverter extends JSXConverter {
             }
         };
         widget.OnCheckStateChanged.Add(this.checkboxChangeCallback);
-        this.lastCheckOnChangeFunc = onChange;
+        this.lastRadioOnChangeFunc = onChange;
     }
 
     private setupRadioChange(widget: UE.CheckBox, onChange: Function) {
@@ -128,8 +132,8 @@ export class InputJSXConverter extends JSXConverter {
             widget.WidgetStyle.CheckBoxType = UE.ESlateCheckBoxType.CheckBox;
         }
 
-        if (checked) widget.SetIsChecked(true);
-        else widget.SetIsChecked(false);
+        if (checked ===  true) widget.SetIsChecked(true);
+        else if (checked === false) widget.SetIsChecked(false);
 
         // For radios, clicking an already-checked control should not uncheck it.
         if (typeof onChange === 'function') {
@@ -169,8 +173,8 @@ export class InputJSXConverter extends JSXConverter {
     }
 
     private updateSliderChangeHandle(widget: UE.Slider, onChange: Function) {
-        const onChangeFuncSame: boolean = compareTwoFunctions(this.lastSliderChangeFunc, onChange);
-        if (onChangeFuncSame) return;
+        // const onChangeFuncSame: boolean = compareTwoFunctions(this.lastSliderChangeFunc, onChange);
+        // if (onChangeFuncSame) return;
 
         if (this.sliderChangeCallback) {
             widget.OnValueChanged.Remove(this.sliderChangeCallback);
@@ -187,7 +191,7 @@ export class InputJSXConverter extends JSXConverter {
         this.lastSliderChangeFunc = onChange;
     }
 
-    private setupSlider(widget: UE.Slider, props: any, isUpdate: boolean) {
+    private setupSlider(widget: UE.Slider, props: any, isUpdate: boolean): UE.Widget {
         const { value, min, max, step, onChange } = props;
 
         // Set Slider properties
@@ -208,6 +212,45 @@ export class InputJSXConverter extends JSXConverter {
                 this.setupSliderChangeHandle(widget, onChange);
             }
         }
+
+        if (!isUpdate) {
+            this.sliderWrapper = this.createSliderSizeBox(widget);
+            return this.sliderWrapper;
+        }
+
+        return widget;
+    }
+
+    private createSliderSizeBox(slider: UE.Slider): UE.SizeBox {
+        if (this.sliderWrapper) {
+            return this.sliderWrapper;
+        }
+
+        const sizeBox = new UE.SizeBox(this.outer);
+        sizeBox.SetWidthOverride(InputJSXConverter.DEFAULT_SLIDER_WIDTH);
+        sizeBox.SetMinDesiredWidth(InputJSXConverter.DEFAULT_SLIDER_WIDTH);
+        sizeBox.SetMaxDesiredWidth(InputJSXConverter.DEFAULT_SLIDER_WIDTH);
+        sizeBox.AddChild(slider);
+        return sizeBox;
+    }
+
+    private resolveSliderInstance(widget: UE.Widget): UE.Slider | null {
+        if (this.sliderWidget) {
+            return this.sliderWidget;
+        }
+
+        if (widget instanceof UE.Slider) {
+            return widget;
+        }
+
+        if (widget instanceof UE.SizeBox) {
+            const content = widget.GetContent();
+            if (content instanceof UE.Slider) {
+                return content;
+            }
+        }
+
+        return null;
     }
 
     createNativeWidget(): UE.Widget {
@@ -225,8 +268,9 @@ export class InputJSXConverter extends JSXConverter {
             this.isRadio = true;
             this.isCheckbox = false;
         } else if (inputType === "range") {
-            widget = new UE.Slider(this.outer);
-            this.setupSlider(widget as UE.Slider, this.props, false);
+            const slider = new UE.Slider(this.outer);
+            this.sliderWidget = slider;
+            widget = this.setupSlider(slider, this.props, false);
             this.isSlider = true;
         } else {
             widget = new UE.EditableText(this.outer);
@@ -245,7 +289,11 @@ export class InputJSXConverter extends JSXConverter {
         } else if (this.isRadio) {
             this.setupRadio(widget as UE.CheckBox, changedProps, true);
         } else if (this.isSlider){
-            this.setupSlider(widget as UE.Slider, changedProps, true);
+            const sliderInstance = this.resolveSliderInstance(widget);
+            if (sliderInstance) {
+                this.sliderWidget = sliderInstance;
+                this.setupSlider(sliderInstance, changedProps, true);
+            }
         } else {
             this.setupEditableText(widget as UE.EditableText, changedProps, true);
         }

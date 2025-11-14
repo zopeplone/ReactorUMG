@@ -111,9 +111,10 @@ export class SelectConverter extends JSXConverter {
         };
 
         if (isUpdate) {
-            if (!compareTwoFunctions(this.nativeOnChangeLast, onChange)) {
-                rebindOnChange(onChange);
-            }
+            rebindOnChange(onChange);
+            // if (!compareTwoFunctions(this.nativeOnChangeLast, onChange)) {
+            //     rebindOnChange(onChange);
+            // }
         } else {
             if (onChange && typeof onChange === 'function') {
                 rebindOnChange(onChange);

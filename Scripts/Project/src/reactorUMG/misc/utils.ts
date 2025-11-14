@@ -151,9 +151,10 @@ export function findChangedProps(oldProps: any, newProps: any): any {
 
             // Functions: compare by source string
             if (typeof oldValue === 'function' && typeof newValue === 'function') {
-                if (!compareTwoFunctions(oldValue, newValue)) {
-                    result[key] = newValue;
-                }
+                // if (!compareTwoFunctions(oldValue, newValue)) {
+                //     result[key] = newValue;
+                // }
+                result[key] = newValue;
                 continue;
             }
 

@@ -15,6 +15,9 @@ import { createElementConverter, ElementConverter } from './converter';
  * @returns True if the values are deeply equal, false otherwise.
  */
 function deepEquals(x: any, y: any) {
+    // force update function
+    if (typeof x === 'function' || typeof y === 'function') return false;
+
     if ( x === y ) return true;
 
     if ( ! ( x instanceof Object ) || ! ( y instanceof Object ) ) return false;
