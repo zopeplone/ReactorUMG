@@ -1,4 +1,39 @@
-﻿import { getInlineStyles, normalizePseudo } from './inline_style_registry';
+import { getInlineStyles, normalizePseudo } from './inline_style_registry';
+
+function mergeStyleRecords(target: Record<string, any>, addition?: Record<string, any>) {
+    if (addition && Object.keys(addition).length > 0) {
+        Object.assign(target, addition);
+    }
+}
+
+function fetchCssSelector(selector: string, pseudo: string) {
+    let style = getCssStyleFromGlobalCache(selector, pseudo);
+    if (!style && pseudo.startsWith(':')) {
+        style = getCssStyleFromGlobalCache(selector, pseudo.slice(1));
+    }
+    return style || undefined;
+}
+
+function getDescendantStylesForClass(className: string, childType: string, pseudo?: string): Record<string, any> {
+    if (!className || !childType) {
+        return {};
+    }
+
+    const normalizedChildType = childType.trim().toLowerCase();
+    if (!normalizedChildType) {
+        return {};
+    }
+
+    const normalizedPseudo = normalizePseudo(pseudo);
+    const baseSelector = className.startsWith('uniquescope_') ? className : `.${className}`;
+    const descendantSelector = `${baseSelector} ${normalizedChildType}`;
+    const result: Record<string, any> = {};
+
+    mergeStyleRecords(result, fetchCssSelector(descendantSelector, normalizedPseudo));
+    mergeStyleRecords(result, getInlineStyles('class', `${className} ${normalizedChildType}`, normalizedPseudo));
+
+    return result;
+}
 
 export function getStylesFromClassSelector(className: string, pseudo?: string): Record<string, any> {
     if (!className) {
@@ -6,30 +41,18 @@ export function getStylesFromClassSelector(className: string, pseudo?: string): 
     }
 
     let classNameStyles = {};
-    if (className) {
-        // Split multiple classes
-        const classNames = className.split(' ');
-        for (const className of classNames) {
-            // Get styles associated with this class name
-            let classStyle = {};
-            const normalizedPseudo = normalizePseudo(pseudo);
-            if (className.startsWith("uniquescope_")) {
-                  classStyle = getCssStyleFromGlobalCache(className, normalizedPseudo) 
-                    || (normalizedPseudo.startsWith(':') ? getCssStyleFromGlobalCache(className, normalizedPseudo.slice(1)) : undefined);
-            } else {
-                classStyle = getCssStyleFromGlobalCache("." + className, normalizedPseudo) 
-                    || (normalizedPseudo.startsWith(':') ? getCssStyleFromGlobalCache("." + className, normalizedPseudo.slice(1)) : undefined);
-            }
+    const normalizedPseudo = normalizePseudo(pseudo);
 
-            if (classStyle) {
-                // Merge the class styles into our style object
-                classNameStyles = { ...classNameStyles, ...classStyle };
-            }
-            const inlineStyle = getInlineStyles('class', className, normalizedPseudo);
-            if (inlineStyle) {
-                classNameStyles = { ...classNameStyles, ...inlineStyle };
-            }
-        }
+    // Split multiple classes
+    const classNames = className.split(' ');
+    for (const token of classNames) {
+        if (!token) continue;
+        const baseSelector = token.startsWith('uniquescope_') ? token : `.${token}`;
+        const classStyle = fetchCssSelector(baseSelector, normalizedPseudo);
+        mergeStyleRecords(classNameStyles, classStyle);
+
+        const inlineStyle = getInlineStyles('class', token, normalizedPseudo);
+        mergeStyleRecords(classNameStyles, inlineStyle);
     }
 
     return classNameStyles;
@@ -41,8 +64,8 @@ export function getStyleFromIdSelector(id: string, pseudo?: string): Record<stri
     }
 
     const normalizedPseudo = normalizePseudo(pseudo);
-    const idStyle = getCssStyleFromGlobalCache("#" + id, normalizedPseudo)
-        || (normalizedPseudo.startsWith(':') ? getCssStyleFromGlobalCache("#" + id, normalizedPseudo.slice(1)) : undefined);
+    const idStyle = getCssStyleFromGlobalCache(`#${id}`, normalizedPseudo)
+        || (normalizedPseudo.startsWith(':') ? getCssStyleFromGlobalCache(`#${id}`, normalizedPseudo.slice(1)) : undefined);
     const inlineStyle = getInlineStyles('id', id, normalizedPseudo);
     if (inlineStyle) {
         return { ...(idStyle || {}), ...inlineStyle };
@@ -67,10 +90,10 @@ export function getStyleFromTypeSelector(type: string, pseudo?: string): Record<
 }
 
 /**
- * 从props中获取所有渠道定义的样式
- * @param type 元素类型
- * @param props 组件属性
- * @param pseudo 是否获取伪类属性
+ * ??props?��??????????????????
+ * @param type ???????
+ * @param props ???????
+ * @param pseudo ?????��??????
  * @returns 
  */
 export function getAllStyles(type: string, props: any, pseudo?: string): Record<string, any> {
@@ -80,6 +103,14 @@ export function getAllStyles(type: string, props: any, pseudo?: string): Record<
 
     // get all the styles from css selector and jsx style
     const classNameStyles = getStylesFromClassSelector(props?.className, pseudo);
+
+    const inheritedClasses: string[] = props?.__inheritedClassNames ?? [];
+    if (inheritedClasses.length > 0 && type) {
+        for (const ancestorClass of inheritedClasses) {
+            mergeStyleRecords(classNameStyles, getDescendantStylesForClass(ancestorClass, type, pseudo));
+        }
+    }
+
     const idStyle = getStyleFromIdSelector(props?.id, pseudo);
     const typeStyle = getStyleFromTypeSelector(type, pseudo);
     const inlineStyles = props?.style || {};
@@ -124,7 +155,7 @@ export function convertCssToStyles(css: any): Record<string, any> {
 }
 
 /**
- * 将CSS样式的字符串格式转换为JSX样式对象
+ * ??CSS?????????????????JSX???????
  * @param css 
  * @returns 
  */
@@ -161,4 +192,3 @@ export function convertCssToStyles2(css: string): Record<string, any> {
 
     return styles;
 }
-

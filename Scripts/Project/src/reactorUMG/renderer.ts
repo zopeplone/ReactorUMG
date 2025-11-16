@@ -1,38 +1,153 @@
-import * as Reconciler from 'react-reconciler';
+﻿import * as Reconciler from 'react-reconciler';
 import * as puerts from 'puerts';
 import * as UE from 'ue';
 import { createElementConverter, ElementConverter } from './converter';
 
+type HostContext = {
+    classStack: string[];
+    currentClassName?: string;
+};
+
+function extractClassTokens(className?: string): string[] {
+    if (!className) {
+        return [];
+    }
+    return className
+        .split(' ')
+        .map((token) => token.trim())
+        .filter((token) => token.length > 0);
+}
+
+const REACT_ELEMENT_TYPE = typeof Symbol === 'function' ? Symbol.for('react.element') : 0;
+
+function isReactElement(value: any) {
+    return value && typeof value === 'object' && value.$$typeof === REACT_ELEMENT_TYPE;
+}
+
+function isPlainObject(value: any): value is Record<string, any> {
+    return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function normalizeComparableChildren(value: any): any[] {
+    if (value === undefined || value === null) {
+        return [];
+    }
+    const arrayified = Array.isArray(value) ? value : [value];
+    return arrayified.filter((item) => !isReactElement(item));
+}
+
 /**
  * Compares two values for deep equality.
  *
- * This function checks if two values are strictly equal, and if they are objects,
- * it recursively checks their properties for equality, excluding the 'children' 
- * and 'Slot' properties.
- *
- * @param x - The first value to compare.
- * @param y - The second value to compare.
- * @returns True if the values are deeply equal, false otherwise.
+ * Mirrors the semantics used by findChangedProps so React props trigger updates
+ * only when a meaningful difference is detected.
  */
 function deepEquals(x: any, y: any) {
-    // force update function
-    if (typeof x === 'function' || typeof y === 'function') return false;
+    const seen = new WeakMap<object, WeakSet<object>>();
+    const hasOwn = Object.prototype.hasOwnProperty;
 
-    if ( x === y ) return true;
+    const equals = (left: any, right: any): boolean => {
+        if (left === right) {
+            return true;
+        }
 
-    if ( ! ( x instanceof Object ) || ! ( y instanceof Object ) ) return false;
+        // functions always considered different to force updates
+        if (typeof left === 'function' || typeof right === 'function') {
+            return false;
+        }
 
-    for (var p in x) { // all x[p] in y
-        if (p == 'children') continue;
-        if (!deepEquals(x[p], y[p])) return false;
-    }
+        if (left === null || right === null || left === undefined || right === undefined) {
+            return left === right;
+        }
 
-    for (var p in y) {
-        if (p == 'children') continue;
-        if (!x.hasOwnProperty(p)) return false;
-    }
+        if (Array.isArray(left) && Array.isArray(right)) {
+            if (left.length !== right.length) {
+                return false;
+            }
+            for (let i = 0; i < left.length; i++) {
+                if (!equals(left[i], right[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
 
-    return true;
+        if (isPlainObject(left) && isPlainObject(right)) {
+            let set = seen.get(left);
+            if (!set) {
+                set = new WeakSet<object>();
+                seen.set(left, set);
+            }
+            if (set.has(right)) {
+                return true; // already compared this pair
+            }
+            set.add(right);
+
+            const leftKeys = Object.keys(left);
+            const rightKeys = Object.keys(right);
+            let normalizedLeftChildren: any[] | undefined;
+            let normalizedRightChildren: any[] | undefined;
+
+            for (const key of leftKeys) {
+                if (key.startsWith('_') || key.startsWith('$$')) {
+                    continue;
+                }
+                if (key === 'children') {
+                    normalizedLeftChildren ??= normalizeComparableChildren(left[key]);
+                    normalizedRightChildren ??= normalizeComparableChildren(right[key]);
+                    if (normalizedLeftChildren.length !== normalizedRightChildren.length) {
+                        return false;
+                    }
+                    for (let i = 0; i < normalizedLeftChildren.length; i++) {
+                        if (!equals(normalizedLeftChildren[i], normalizedRightChildren[i])) {
+                            return false;
+                        }
+                    }
+                    continue;
+                }
+
+                if (!hasOwn.call(right, key)) {
+                    return false;
+                }
+
+                if (!equals(left[key], right[key])) {
+                    return false;
+                }
+            }
+
+            for (const key of rightKeys) {
+                if (key.startsWith('_') || key.startsWith('$$')) {
+                    continue;
+                }
+                if (!hasOwn.call(left, key)) {
+                    if (key === 'children') {
+                        normalizedRightChildren ??= normalizeComparableChildren(right[key]);
+                        return normalizedRightChildren.length === 0;
+                    }
+                    return false;
+                }
+
+                if (key === 'children' && normalizedLeftChildren === undefined) {
+                    normalizedLeftChildren = normalizeComparableChildren(left[key]);
+                    normalizedRightChildren = normalizeComparableChildren(right[key]);
+                    if (normalizedLeftChildren.length !== normalizedRightChildren.length) {
+                        return false;
+                    }
+                    for (let i = 0; i < normalizedLeftChildren.length; i++) {
+                        if (!equals(normalizedLeftChildren[i], normalizedRightChildren[i])) {
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        return false;
+    };
+
+    return equals(x, y);
 }
 
 class UMGWidget {
@@ -40,22 +155,42 @@ class UMGWidget {
     typeName: string;
     props: any;
     rootContainer: RootContainer;
-    hostContext: any;
+    hostContext: HostContext;
     // isContainer: boolean;
     converter: ElementConverter;
 
-    constructor(typeName: string, props: any, rootContainer: RootContainer, hostContext: any) {
+    constructor(typeName: string, props: any, rootContainer: RootContainer, hostContext: HostContext) {
         this.typeName = typeName;
-        this.props = props;
         this.rootContainer = rootContainer;
-        this.hostContext = hostContext;
+        this.hostContext = hostContext ?? { classStack: [], currentClassName: undefined };
+        this.props = this.decoratePropsWithContext(props);
         this.init();
+    }
+
+    private decoratePropsWithContext<T extends Record<string, any>>(props: T): T {
+        if (!props) {
+            return props;
+        }
+        const inheritedClasses = this.hostContext?.classStack;
+        if (!inheritedClasses || inheritedClasses.length === 0) {
+            return props;
+        }
+        const existing = (props as any).__inheritedClassNames;
+        let identical = false;
+        if (Array.isArray(existing) && existing.length === inheritedClasses.length) {
+            identical = existing.every((value, index) => value === inheritedClasses[index]);
+        }
+        if (identical) {
+            return props;
+        }
+        return { ...(props as any), __inheritedClassNames: inheritedClasses.slice() };
     }
 
     init() {
         try {
             const WidgetTreeOuter = this.rootContainer.widgetTree;
-            this.converter = createElementConverter(this.typeName, this.props, WidgetTreeOuter);
+            const decoratedProps = this.decoratePropsWithContext(this.props);
+            this.converter = createElementConverter(this.typeName, decoratedProps, WidgetTreeOuter);
             this.native = this.converter.createWidget();
             const shouldIgnore = (this.converter as any)?.ignore === true;
             if (this.native === null && !shouldIgnore) {
@@ -69,7 +204,10 @@ class UMGWidget {
 
     update(oldProps: any, newProps: any) {
         if (this.native !== null) {
-            this.converter.updateWidget(this.native, oldProps, newProps);
+            const decoratedOld = this.decoratePropsWithContext(oldProps);
+            const decoratedNew = this.decoratePropsWithContext(newProps);
+            this.props = decoratedNew;
+            this.converter.updateWidget(this.native, decoratedOld, decoratedNew);
         }
     }
 
@@ -90,6 +228,7 @@ class UMGWidget {
 
 class RootContainer {
     public widgetTree: UE.WidgetTree;
+    public reconcilerContainer: any;
     constructor(nativePtr: UE.WidgetTree) {
         this.widgetTree = nativePtr;
     }
@@ -105,19 +244,33 @@ class RootContainer {
             UE.UMGManager.RemoveRootWidgetFromWidgetTree(this.widgetTree, child.native);
         }
     }
+
+    clearAllWidgets() {
+        this.widgetTree.RootWidget = null;
+    }
 }
 
-const hostConfig : Reconciler.HostConfig<string, any, RootContainer, UMGWidget, UMGWidget, any, any, {}, any, any, any, any, any> = {
-    getRootHostContext () { return {}; },
-    //CanvasPanel()的parentHostContext是getRootHostContext返回的
-    getChildHostContext (parentHostContext: {}) { return parentHostContext;},
-    appendInitialChild (parent: UMGWidget, child: UMGWidget) { parent.appendChild(child); },
+const hostConfig : Reconciler.HostConfig<string, any, RootContainer, UMGWidget, UMGWidget, any, any, HostContext, any, any, any, any, any> = {
+    getRootHostContext () { return { classStack: [], currentClassName: undefined }; },
+    //CanvasPanel()的parentHostContext是getRootHostContext返回值; 累加父元素class以便后代样式解析
+    getChildHostContext (parentHostContext: HostContext, _type: string, props: any) {
+        const parentStack = parentHostContext?.classStack ?? [];
+        const nextStack = parentStack.slice();
+        const tokens = extractClassTokens(props?.className);
+        if (tokens.length) {
+            nextStack.push(...tokens);
+        }
+        return {
+            classStack: nextStack,
+            currentClassName: props?.className
+        };
+    },    appendInitialChild (parent: UMGWidget, child: UMGWidget) { parent.appendChild(child); },
     appendChildToContainer (container: RootContainer, child: UMGWidget) { container.appendChild(child); },
     appendChild (parent: UMGWidget, child: UMGWidget) { parent.appendChild(child); },
-    createInstance (type: string, props: any, rootContainer: RootContainer, hostContext: any, internalHandle: Reconciler.OpaqueHandle) { 
+    createInstance (type: string, props: any, rootContainer: RootContainer, hostContext: HostContext, internalHandle: Reconciler.OpaqueHandle) { 
         return new UMGWidget(type, props, rootContainer, hostContext);
     },
-    createTextInstance (text: string, rootContainer: RootContainer, hostContext: any) {
+    createTextInstance (text: string, rootContainer: RootContainer, hostContext: HostContext) {
         
         return new UMGWidget("text", {text: text, _children_text_instance: true}, rootContainer, hostContext);
     },
@@ -139,19 +292,9 @@ const hostConfig : Reconciler.HostConfig<string, any, RootContainer, UMGWidget, 
         }
     },
   
-    //return false表示不更新，真值将会出现到commitUpdate的updatePayload里头
+    //return false琛ㄧず涓嶆洿鏂帮紝鐪熷€煎皢浼氬嚭鐜板埌commitUpdate鐨剈pdatePayload閲屽ご
     prepareUpdate (instance: UMGWidget, type: string, oldProps: any, newProps: any) {
         try{
-            const textContainers = new Set(['text','span','textarea','label','p','a','h1','h2','h3','h4','h5','h6']);
-            if (textContainers.has(type)) {
-                const oldChild: any = oldProps ? (oldProps as any).children : undefined;
-                const newChild: any = newProps ? (newProps as any).children : undefined;
-                const oldIsText = typeof oldChild === 'string' || typeof oldChild === 'number';
-                const newIsText = typeof newChild === 'string' || typeof newChild === 'number';
-                if ((oldIsText || newIsText) && oldChild !== newChild) {
-                    return true;
-                }
-            }
             return !deepEquals(oldProps, newProps);
         } catch(e) {
             console.error(e.message);
@@ -201,13 +344,21 @@ const hostConfig : Reconciler.HostConfig<string, any, RootContainer, UMGWidget, 
 const reconciler = Reconciler(hostConfig);
 
 export const ReactorUMG = {
+    
     render: function(inWidgetTree: UE.WidgetTree, reactElement: React.ReactNode) {
         if (inWidgetTree == undefined) {
             throw new Error("init with ReactorUIWidget first!");
         }
-        let root = new RootContainer(inWidgetTree);
+        const root = new RootContainer(inWidgetTree);
         const container = reconciler.createContainer(root, 0, null, false, false, "", null, null);
+        root.reconcilerContainer = container;
         reconciler.updateContainer(reactElement, container, null, null);
         return root;
+    },
+    release: function(root: RootContainer) {
+        reconciler.updateContainer(null, root.reconcilerContainer, null, null);
     }
 }
+
+
+

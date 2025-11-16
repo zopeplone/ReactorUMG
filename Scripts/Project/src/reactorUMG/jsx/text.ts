@@ -241,7 +241,27 @@ export class TextConverter extends JSXConverter {
         }
     }
 
+    private isValidTextBlock(textBlock: UE.TextBlock | null | undefined): textBlock is UE.TextBlock {
+        if (!textBlock) {
+            return false;
+        }
+        const candidate = textBlock as any;
+        if (typeof candidate.IsPendingKill === 'function' && candidate.IsPendingKill()) {
+            return false;
+        }
+        if (typeof candidate.IsValidLowLevelFast === 'function') {
+            return candidate.IsValidLowLevelFast();
+        }
+        if (typeof candidate.IsValidLowLevel === 'function') {
+            return candidate.IsValidLowLevel();
+        }
+        return true;
+    }
+
     private setupTextBlockProperties(textBlock: UE.TextBlock, props: any) {
+        if (!this.isValidTextBlock(textBlock)) {
+            return;
+        }
         const styles = this.normalizeStyles(props);
         if (hasFontStyles(styles)) {
             if (!textBlock.Font) {
@@ -302,6 +322,9 @@ export class TextConverter extends JSXConverter {
     }
 
     private applyTextContent(textBlock: UE.TextBlock, content: string) {
+        if (!this.isValidTextBlock(textBlock)) {
+            return;
+        }
         textBlock.SetText(content ?? '');
     }
 
