@@ -178,14 +178,16 @@ class UMGWidget {
 
     appendChild(child: UMGWidget) {
         const shouldForceAppend = (child.converter as any)?.forceAppend === true;
-        if ((shouldForceAppend &&this.native && child ) 
+        if ((shouldForceAppend && this.native && child ) 
             || (this.native && child && child.native)) {
             this.converter.appendChild(this.native, child.native, child.typeName, child.props);
         }
     }
 
     removeChild(child: UMGWidget) {
-        if (this.native && child && child.native) {
+        const shouldForceAppend = (child.converter as any)?.forceAppend === true;
+        if ((shouldForceAppend && this.native && child ) || 
+            (this.native && child && child.native)) {
             this.converter.removeChild(this.native, child.native);
         }
     }
@@ -325,6 +327,3 @@ export const ReactorUMG = {
         reconciler.updateContainer(null, root.reconcilerContainer, null, null);
     }
 }
-
-
-

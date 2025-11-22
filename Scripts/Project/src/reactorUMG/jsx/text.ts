@@ -330,12 +330,12 @@ export class TextConverter extends JSXConverter {
 
     createNativeWidget() {
         if (this.props?.children) {
-            if (isReactElementInChildren(this.props.children)) {
+            if (this.typeName === "label" && isReactElementInChildren(this.props.children)) {
                 // create wrap box
-                const textWrapBox = new UE.WrapBox();
-                this.setupWrapBoxProperties(textWrapBox, this.props);
+                const wrapBox = new UE.WrapBox(this.outer);
+                this.setupWrapBoxProperties(wrapBox, this.props);
 
-                return textWrapBox;
+                return wrapBox;
             }
         }
 
@@ -363,7 +363,7 @@ export class TextConverter extends JSXConverter {
 
         } else if (widget instanceof UE.TextBlock) {
             const text = widget as UE.TextBlock;
-            // this.setupTextBlockProperties(text, _changedProps);
+            this.setupTextBlockProperties(text, _changedProps);
             const content = this.extractTextContent(_changedProps);
             this.applyTextContent(text, content);
             // UE.UMGManager.SynchronizeWidgetProperties(text);
@@ -373,7 +373,7 @@ export class TextConverter extends JSXConverter {
     appendChild(parent: UE.Widget, child: UE.Widget, childTypeName: string, childProps: any): void {
         if (parent instanceof UE.WrapBox) {
             const slot = parent.AddChildToWrapBox(child);
-            slot.bFillEmptySpace = true;
+            // slot.bFillEmptySpace = true;
             this.textWrapBoxSlots.set(child, slot);
         }
     }

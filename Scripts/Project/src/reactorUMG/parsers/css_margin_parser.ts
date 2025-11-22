@@ -102,15 +102,33 @@ export function convertMargin(style: any): UE.Margin {
     return convertToUEMargin(style, margin, marginTop, marginRight, marginBottom, marginLeft);
 }
 
-export function convertGap(gap: string, style: any): UE.Vector2D {
-    if (!gap) {
+export function convertGap(gap: any, style: any): UE.Vector2D {
+    if (gap === undefined || gap === null || gap === '') {
         return new UE.Vector2D(0, 0);
     }
-    const gapValues = gap.split(' ').map(v => {
-        // todo@Caleb196x: 处理react的单位
-        v = v.trim();
-        return convertLengthUnitToSlateUnit(v, style);
-    });
+
+    const toSlate = (value: any): number => {
+        if (value === undefined || value === null) {
+            return 0;
+        }
+        return convertLengthUnitToSlateUnit(value, style);
+    };
+
+    let gapValues: number[] = [];
+
+    if (Array.isArray(gap)) {
+        gapValues = gap.map(toSlate);
+    } else if (typeof gap === 'number') {
+        gapValues = [toSlate(gap)];
+    } else if (typeof gap === 'string') {
+        const trimmed = gap.trim();
+        if (trimmed.length > 0) {
+            gapValues = trimmed.split(/\s+/).map(v => toSlate(v));
+        }
+    } else {
+        // Unsupported type, treat as zero
+        return new UE.Vector2D(0, 0);
+    }
 
     if (gapValues.length === 2) {
         // gap: row column
@@ -118,5 +136,6 @@ export function convertGap(gap: string, style: any): UE.Vector2D {
         return new UE.Vector2D(gapValues[1], gapValues[0]);
     }
 
-    return new UE.Vector2D(gapValues[0], gapValues[0]);
+    const fallback = gapValues.length >= 1 ? gapValues[0] : 0;
+    return new UE.Vector2D(fallback, fallback);
 }
