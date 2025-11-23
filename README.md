@@ -1,187 +1,116 @@
-# ReactorUMG
+<h1 id="reactorumg">ReactorUMG</h1>
+
 ![](./docs/imgs/Cover.png)
-ReactorUMG is a helper plugin for Unreal Engine that lets you build **UMG** game UI and editor UI using **React**.  
-It is built on **Puerts/PuertsTS** and uses text-based code that works well with AI tools, so you can iterate quickly like a web front‑end workflow. **It is particularly suitable for rapidly developing various in-editor UI tools using AI.**
 
-> **Keywords:** Unreal Engine, UE5, UMG, UI, Slate, React, TypeScript, Plugin, Hot Realod, Live Preview, Puerts
+ReactorUMG helps you build **UMG** game UI and editor UI in Unreal Engine using **React**.
+The plugin is built on **PuertTS** scripting and pairs with AI assistance so you can develop and iterate UI efficiently with a web-style workflow. **It is especially suited to using AI to quickly build a variety of in-editor UI tools.**
 
-⚠️ **Alpha Stage:** APIs and structure may change before a stable release.
+> **Keywords:** Unreal Engine, UE5, UMG, UI, Slate, React, TypeScript, Plugin, Hot Reload, Live Preview, Puerts
 
-⚠️ **Before You Start:** Please read the **FAQ** first to avoid common pitfalls.
-
----
-
-[跳转中文](README_zh.md)
-
-## Table of Contents
-- [ReactorUMG](#reactorumg)
-  - [Table of Contents](#table-of-contents)
-  - [Why ReactorUMG](#why-reactorumg)
-  - [Key Features](#key-features)
-  - [Requirements](#requirements)
-  - [Install \& Quick Start](#install--quick-start)
-    - [Install Node.js and a Package Manager](#install-nodejs-and-a-package-manager)
-    - [Get the Plugin](#get-the-plugin)
-    - [Place the Folder](#place-the-folder)
-    - [Enable the Plugin](#enable-the-plugin)
-    - [Initialize Environment](#initialize-environment)
-    - [Create UI](#create-ui)
-      - [Create Runtime UI](#create-runtime-ui)
-      - [Create Editor UI](#create-editor-ui)
-  - [Project Layout Example](#project-layout-example)
-  - [Runtime UI Supported Platforms](#runtime-ui-supported-platforms)
-  - [FAQ](#faq)
-  - [Roadmap](#roadmap)
-  - [Contributing](#contributing)
-  - [License](#license)
-  - [Links \& Resources](#links--resources)
-
----
-## Why ReactorUMG
-UMG is powerful, but it does not have a text-first, web-like development flow. That makes it harder to reuse AI and front‑end practices (components, hot reload, linting, tests).  
-**ReactorUMG** lets you build UI with **React + TypeScript**, preview changes live, and bring modern web development methods into Unreal UI work.
+⚠️ **Alpha stage**: APIs and structure may still change; a stable release will follow once things settle.
+⚠️ **Before you start**: Please read the FAQ first to avoid known pitfalls.
 
 ---
 
-## Key Features
-- **React Components:** Function/class components, hooks, JSX/TSX.
-- **Reusable UI:** Build and share components for design systems/skins.
-- **Scripted Logic:** Write interactions in TypeScript and reuse the front‑end ecosystem.
-- **Live Preview & Hot Reload:** Save to refresh; validate layout and logic fast.
-- **Examples Included:** From simple to advanced templates.
-- **AI-Friendly:** Text code makes generation and refactoring easy for LLMs.
-- **UI Animation:** Import **Spine** and **Rive** animations for UI.
+<h2 id="767fa455">Contents</h2>
+
++ [Why use ReactorUMG](#ca757ae1)
++ [Core Features](#d2ffce75)
++ [System Requirements](#19c93d0a)
++ [Install and Quick Start](#2e52a2da)
++ [Project Structure Example](#f2407408)
++ [FAQ](#faq)
++ [Roadmap](#c644eeae)
++ [Contribution Guide](#f31ccad5)
++ [License](#20a28457)
++ [Links and Resources](#477c63ed)
 
 ---
 
-## Requirements
-- Unreal Engine **5.x**
-- **Node.js ≥ 18** and **Yarn / PNPM / NPM** (choose one)
-- VSCode / Cursor (recommended)
-- Windows 10/11, Linux
+<h2 id="ca757ae1">Why use ReactorUMG</h2>
+
+UMG is powerful, but it lacks a text-first, programmable front-end ecosystem, making it hard to plug into AI and front-end engineering practices (componentization, hot reload, static checks, automated testing, etc.). That slows teams who need quick iteration.
+To solve this, we built the ReactorUMG plugin. **ReactorUMG** lets you use **native React + TypeScript + AI** to quickly build game UI or editor UI. It is WYSIWYG, supports live preview and hot reload while editing, and connects modern web front-end practices to game UI development.
 
 ---
 
-## Install & Quick Start
+<h2 id="d2ffce75">Core Features</h2>
 
-### Install Node.js and a Package Manager
-Standard Node.js setup. Yarn is recommended as the package manager.
-
-### Get the Plugin
-- Download the latest **ReactorUMG** release, or clone this project.
-- Place the plugin source under `Plugins/ReactorUMG` in your UE project.
-
-### Place the Folder
-- Project: `<YourUEProject>/Plugins/ReactorUMG`  
-- Engine (optional): `<UE_5.x>/Engine/Plugins/Marketplace/ReactorUMG`
-
-### Initialize Environment
-- Run `setup_win.bat` in `Plugins/ReactorUMG/Tools` to set up the environment.
-
-### Enable the Plugin
-- Launch your ue project. If you are using the source build, you will also need to compile the plugin code.
-- UE → `Edit > Plugins` → search **ReactorUMG** → enable → restart if needed.
-
-### Create UI
-
-#### Create Runtime UI
-- Launch the project (build first if using the source build).
-- In Content Browser, create **ReactorUIWidget** via **ReactorUMG → ReactorUMG**.  
-  <img src="./docs/imgs/startup_create_gameui.png" alt="Create Runtime UI Asset" width="220" height="320">
-- The system compiles and loads scripts. Double‑click the asset to open the starter page.  
-  <img src="./docs/imgs/startup_create_ui_editor.png" alt="Open UI" width="420">
-- The plugin generates a UI folder and template files at  
-  `<ProjectDir>/TypeScript/src/<ProjectName>/<AssetPath>` (see *Project Layout*).  
-  <img src="./docs/imgs/startup_dir_struct.png" alt="Folder Layout" width="220">
-- **Do not edit** the auto‑generated `launch.tsx` (boot file).
-- Your UI entry is `<AssetName>.tsx` (for example `RW_Debug.tsx`). Add your React code there.
-- Use your UI like any UMG widget: create it with `CreateWidget` in Blueprints/C++.
-
-#### Create Editor UI
-- Launch the project (build first if using the source build).
-- In Content Browser, create **EditorUtilityWidget** via **ReactorUMG → EditorUtilityUMG**.  
-  <img src="./docs/imgs/startup_create_editorui.png" alt="Create Editor UI Asset" width="220" height="320">
-- Templates are generated at  
-  `<ProjectDir>/TypeScript/src/<ProjectName>/Editor/<AssetPath>` (note the `Editor` folder).
-- You can preview and iterate directly in the UI editor.  
-  <img src="./docs/imgs/startup_editor_preview.png" alt="Editor Preview" width="420">
-
-> **Naming Tip:** Use `RW_`* for runtime UI and `ERW_`* for editor UI.
-
-- For more information, see the project documentation. https://caleb196x.github.io/ReactorUMGOnlineDoc/
----
-
-## Project Layout Example
-```plain
-MyProject/
-├─ Content/                        # UE assets
-│  └─ JavaScript/                  # JS output
-├─ Plugins/
-│  └─ ReactorUMG/                  # Plugin
-│     ├─ Scripts/
-│     │  ├─ Project/src/reactorUMG/# Project templates
-│     │  └─ System/JavaScript/     # System scripts
-│     └─ Source/                   # C++ source
-├─ TypeScript/                     # Auto-generated React/TS workspace
-│  ├─ src/
-│  │  ├─ MyProject/                # Editor/Runtime UI
-│  │  │  ├─ Editor/                # Editor UI
-│  │  │  └─ RW_Test/               # Runtime UI scripts
-│  │  │     ├─ index.tsx
-│  │  │     ├─ launch.tsx          # UI bootstrap (do not modify)
-│  │  │     └─ RW_Test.tsx         # Actual UI code
-│  │  ├─ reactorUMG/               # Framework
-│  │  └─ types/                    # Puerts/UE types
-│  ├─ node_modules/
-│  ├─ tsconfig.json
-│  └─ package.json
-└─ MyProject.uproject
-```
-
-**Notes**
-- **JavaScript**: system JS and TS build output. Package as non‑asset so runtime scripts can load.
-- **TypeScript**: front‑end style project root.
-- **TypeScript/src/MyProject**: auto‑generated UI scripts and your edits.
++ **Native React experience**: Supports React Hooks, function/class components, TSX syntax, React container layouts, React native components, and UMG components.
++ **Scriptable interaction**: Use PuerTS to call engine and editor scripting interfaces as a Blueprint substitute.
++ **AI-assisted development**: Use AI Coding to quickly build editor tool panels, runtime UI, and reusable component libraries.
++ **Live preview**: Hot-reload validation and in-editor live preview to verify layout and interaction quickly.
++ **Comprehensive examples**: Samples and templates from beginner to advanced.
++ **UI animation**: Import Spine and Rive UI animations.
 
 ---
 
-## Runtime UI Supported Platforms
-- Windows, Android, Linux
+<h2 id="19c93d0a">Development System Requirements</h2>
+
++ Unreal Engine **5.x**
++ **Node.js >= 18** and **Yarn / PNPM / NPM** (choose one)
++ VSCode / Cursor (recommended)
++ Windows 10/11, Linux
 
 ---
 
-## FAQ
-**Q: How does this relate to UMG/Slate?**  
-A: ReactorUMG is for teams who want to build UI with **React**, while still relying on UE rendering and the Puerts bridge.
-
-**Q: What about performance?**  
-A: It depends on your UI complexity and state updates. Keep components small, lift state, avoid unnecessary re‑renders, and disable dev‑only overhead when shipping.
+<h2 id="2e52a2da">Install and Quick Start</h2>
+See the docs: https://caleb196x.github.io/ReactorUMGOnlineDoc/quickstart/
 
 ---
 
-## Roadmap
-- [ ] Tailwind CSS support
+<h2 id="x0qyv">Runtime UI Supported Platforms</h2>
+
++ Windows, Android, Linux
+
+<h2 id="faq">FAQ</h2>
+
+**Q: How does this relate to native UMG/Slate?**
+A: ReactorUMG targets teams who build UI with React and complements UMG/Slate; it still relies on UE for UI rendering and the scripting bridge.
+
+**Q: How is performance?**
+A: UI complexity and state-change frequency affect performance. Control component granularity, lift state, reduce unnecessary re-renders, and disable debug overhead when needed.
 
 ---
 
-## Contributing
-Contributions are welcome: bug reports, docs, feature requests, pull requests.
+<h2 id="c644eeae">Roadmap</h2>
 
-1. Fork and branch: `feat/your-feature` or `fix/your-bug`  
-2. Run local examples  
-3. Ensure checks pass: `yarn build && yarn lint && yarn test`  
-4. Open a PR with motivation, impact, and how you tested
+- [x] Support basic native React components and basic CSS styles
+- [ ] Design a ReactorUMG-centered component library to support complex game UI, improving runtime efficiency and stability
+- [ ] Support Tailwind CSS
+...
 
----
-
-## License
-**MIT License**. See `LICENSE`.
+Want something not listed? Submit a request in Issues.
 
 ---
 
-## Links & Resources
-- **Docs Home:** (TBD)
-- **Sample Project:** (TBD)
-- **Releases:** (TBD)
-- **Issues:** (TBD)
-- **Discussions:** (TBD)
+<h2 id="f31ccad5">Contribution Guide</h2>
+
+We welcome all kinds of contributions: bug reports, docs updates, feature proposals, and PRs.
+
+1. Fork the repo and create a branch: `feat/your-feature` or `fix/your-bug`
+2. Run local examples to validate changes
+3. Ensure build and basic checks pass: `yarn build && yarn lint && yarn test`
+4. Submit a PR with a brief summary of motivation, scope, and testing
+
+See **CONTRIBUTING.md** for submission flow, coding standards, and commit message conventions.
+
+---
+
+<h2 id="20a28457">License</h2>
+
+This project uses the **MIT License**. See **LICENSE** for details.
+
+---
+
+<h2 id="477c63ed">Links and Resources</h2>
+
++ **Docs Home**: https://caleb196x.github.io/ReactorUMGOnlineDoc/
++ **Sample Project**: https://github.com/Caleb196x/ReactorUMGDemo
++ **Release Downloads (Releases)**: __
++ **Issues and Suggestions (Issues)**: __
++ **Discussion Board (Discussions)**: __
+
+---
+
+If this project helps you, feel free to **Star**, **share**, and tell us your use cases and needs!
