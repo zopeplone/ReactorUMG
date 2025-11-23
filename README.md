@@ -8,9 +8,11 @@ The plugin is built on **PuertTS** scripting and pairs with AI assistance so you
 > **Keywords:** Unreal Engine, UE5, UMG, UI, Slate, React, TypeScript, Plugin, Hot Reload, Live Preview, Puerts
 
 ⚠️ **Alpha stage**: APIs and structure may still change; a stable release will follow once things settle.
+
 ⚠️ **Before you start**: Please read the FAQ first to avoid known pitfalls.
 
 ---
+[跳转到中文](./README_zh.md)
 
 <h2 id="767fa455">Contents</h2>
 
