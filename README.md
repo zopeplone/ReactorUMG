@@ -92,8 +92,7 @@ We welcome all kinds of contributions: bug reports, docs updates, feature propos
 
 1. Fork the repo and create a branch: `feat/your-feature` or `fix/your-bug`
 2. Run local examples to validate changes
-3. Ensure build and basic checks pass: `yarn build && yarn lint && yarn test`
-4. Submit a PR with a brief summary of motivation, scope, and testing
+3. Submit a PR with a brief summary of motivation, scope, and testing
 
 See **CONTRIBUTING.md** for submission flow, coding standards, and commit message conventions.
 

@@ -91,8 +91,7 @@ A: UI 复杂度与状态变更频率会影响性能。推荐进行组件颗粒�
 
 1. Fork 仓库并创建分支：`feat/your-feature` 或 `fix/your-bug`
 2. 运行本地示例验证变更
-3. 确保通过构建与基本检查：`yarn build && yarn lint && yarn test`
-4. 提交 PR，并简要说明动机、影响范围与测试方式
+3. 提交 PR，并简要说明动机、影响范围与测试方式
 
 详情请见 **CONTRIBUTING.md**（将提供提交流程、代码规范、提交信息规范等）。
 
