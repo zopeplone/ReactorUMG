@@ -1,5 +1,11 @@
 <h1 id="reactorumg">ReactorUMG</h1>
 
+![Liscense](https://img.shields.io/badge/license-MIT-blue.svg)
+![Coverage](https://img.shields.io/badge/coverage-90%25-orange)
+[![Unreal Engine](https://img.shields.io/badge/Unreal%20Engine-5.x-purple)](https://www.unrealengine.com/)
+![React](https://img.shields.io/badge/react-%5E18.0.0-61DAFB?logo=react&logoColor=white)
+
+
 ![](./docs/imgs/Cover.png)
 
 ReactorUMG可以帮助您在虚幻引擎（Unreal Engine）中使用 **React** 开发 **UMG** 游戏UI和编辑器UI的辅助插件。  
