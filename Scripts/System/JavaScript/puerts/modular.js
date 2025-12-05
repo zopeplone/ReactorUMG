@@ -196,7 +196,7 @@ var global = global || (function () { return this; }());
             registerStyleClass(mediaKey, mediaStyles);
         }
 
-        console.debug(styleClassesCache);
+        // console.log(styleClassesCache);
     }
     
     function getModuleBySID(id) {

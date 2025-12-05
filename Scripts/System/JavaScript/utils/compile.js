@@ -31,7 +31,7 @@ function getFileOptionSystem(callObject) {
         return res;
     }
     function write(s) {
-        console.debug(s);
+        console.log(s);
     }
     function readFile(path, encoding) {
         let data = puerts_1.$ref(undefined);
