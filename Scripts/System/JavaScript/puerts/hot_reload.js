@@ -100,7 +100,7 @@ var global = global || (function () { return this; }());
                 //puerts.forceReload(url);
             }
         } else {
-            console.warn(`can not find scriptId for ${url}`)
+            console.log(`can not find scriptId for ${url}`)
         }
     };
     

@@ -398,7 +398,7 @@ var global = global || (function () { return this; }());
             }
         }
         if (!reloaded && reloadModuleKey) {
-            console.warn(`can not reload the unloaded module: ${reloadModuleKey}!`);
+            console.log(`can not reload the unloaded module: ${reloadModuleKey}!`);
         }
     }
     
