@@ -30,6 +30,7 @@
 #pragma once
 
 // clang-format off
+#include "Engine/DataAsset.h"
 #include "Engine/Texture2D.h"
 #include "spine/spine.h"
 #include "SpineAtlasAsset.generated.h"

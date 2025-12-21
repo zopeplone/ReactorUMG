@@ -1,6 +1,7 @@
 #include "MixinGenerator.h"
 #include "ReactorUtils.h"
 #include "Framework/Notifications/NotificationManager.h"
+#include "Misc/FileHelper.h"
 #include "Widgets/Notifications/SNotificationList.h"
 
 FString FMixinGenerator::MixinTSFilePath = FPaths::Combine(FReactorUtils::GetPluginDir(), TEXT("Resources"), TEXT("mixin.ts"));

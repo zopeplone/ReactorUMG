@@ -3,6 +3,7 @@
 #include "ReactorUMGWidgetBlueprint.h"
 #include "ReactorUIWidget.h"
 #include "ReactorUtils.h"
+#include "Misc/FileHelper.h"
 
 
 void TemplateScriptCreator::GenerateTemplateLaunchScripts()

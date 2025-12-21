@@ -6,6 +6,9 @@
 #include "MixinGenerator.h"
 #include "ReactorUtils.h"
 
+#include "Brushes/SlateImageBrush.h"
+#include "Styling/SlateStyle.h"
+
 #define LOCTEXT_NAMESPACE "FAutoMixinEditorModule"
 
 static const FString PUERTS_RESOURCES_PATH = FReactorUtils::GetPluginDir() / TEXT("Resources"); // Puerts资源路径
@@ -170,7 +173,8 @@ void FAutoMixinEditorModule::ContextButtonPressed(const TArray<FAssetData>& Sele
 UBlueprint* FAutoMixinEditorModule::GetActiveBlueprint()
 {
 	// 遍历所有被编辑的资产 并找到活动蓝图
-	for (const TArray<UObject*> EditedAssets = AssetEditorSubsystem->GetAllEditedAssets(); UObject* EditedAsset : EditedAssets)
+	const TArray<UObject*> EditedAssets = AssetEditorSubsystem->GetAllEditedAssets(); 
+	for (UObject* EditedAsset : EditedAssets)
 	{
 		AssetEditorInstance = AssetEditorSubsystem->FindEditorForAsset(EditedAsset, false);
 
