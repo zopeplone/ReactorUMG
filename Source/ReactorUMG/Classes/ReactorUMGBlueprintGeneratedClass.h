@@ -17,9 +17,20 @@ class REACTORUMG_API UReactorUMGBlueprintGeneratedClass : public UWidgetBlueprin
 	GENERATED_UCLASS_BODY()
 
 public:
+	virtual void PostLoad() override;
+
+	UPROPERTY(BlueprintReadOnly, Category="ReactorUMG")
 	FString MainScriptPath;
+
+	UPROPERTY(BlueprintReadOnly, Category="ReactorUMG")
 	FString TsProjectDir;
+
+	UPROPERTY(BlueprintReadOnly, Category="ReactorUMG")
 	FString TsScriptHomeFullDir;
+
+	UPROPERTY(BlueprintReadOnly, Category="ReactorUMG")
 	FString TsScriptHomeRelativeDir;
+
+	UPROPERTY(BlueprintReadOnly, Category="ReactorUMG")
 	FString WidgetName;
 };

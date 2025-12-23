@@ -22,10 +22,7 @@ bool UReactorUIWidget::Initialize()
 	}
 	return SuperRes;
 #else
-	if (IsRunningGame())
-	{
-		SetNewWidgetTree();
-	}
+	SetNewWidgetTree();
 	return SuperRes;
 #endif
 }
@@ -42,7 +39,7 @@ void UReactorUIWidget::SetNewWidgetTree()
 		if (WidgetTree != nullptr)
 		{
 			UWidgetTree* OldWidgetTree = WidgetTree;
-			WidgetTree = NewObject<UWidgetTree>(this, TEXT("ReactorUMG_WidgetTree"), RF_Transient);
+			WidgetTree = NewObject<UWidgetTree>(this, NAME_None, RF_Transient);
 			OldWidgetTree->MarkAsGarbage();
 			OldWidgetTree = nullptr;
 		}
@@ -58,6 +55,8 @@ void UReactorUIWidget::SetNewWidgetTree()
 				RunScriptToInitWidgetTree();
 			}
 		}
+
+		UE_LOG(LogReactorUMG, Log, TEXT("Setup reactor ui widget with script path: %s"), *LaunchScriptPath);
 		
 		bWidgetTreeInitialized = true;
 	}

@@ -35,7 +35,7 @@ UUserWidget* UUMGManager::CreateWidget(UWidgetTree* Outer, UClass* Class)
 
 void UUMGManager::SynchronizeWidgetProperties(UWidget* Widget)
 {
-#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 2
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION > 2
     if (Widget)
     {
         Widget->SynchronizeProperties();
@@ -59,6 +59,8 @@ USpineAtlasAsset* UUMGManager::LoadSpineAtlas(UObject* Context, const FString& A
         return nullptr;
     }
     
+    UE_LOG(LogReactorUMG, Log, TEXT("Spine atlas asset file( %s ) exists, RawData size %llu."), *AssetFilePath, RawData.NumBytesWithoutNull());
+
     USpineAtlasAsset* SpineAtlasAsset = NewObject<USpineAtlasAsset>(Context, USpineAtlasAsset::StaticClass(),
         NAME_None, RF_Public|RF_Transient);
     SpineAtlasAsset->SetRawData(RawData);
@@ -98,8 +100,9 @@ USpineSkeletonDataAsset* UUMGManager::LoadSpineSkeleton(UObject* Context, const 
 
 #if WITH_EDITORONLY_DATA
     SkeletonDataAsset->SetSkeletonDataFileName(FName(*AssetFilePath));
-    SkeletonDataAsset->SetRawData(RawData);
 #endif
+    SkeletonDataAsset->SetRawData(RawData);
+
     return SkeletonDataAsset;
 }
 #ifdef RIVE_SUPPORT
@@ -377,7 +380,6 @@ void UUMGManager::LoadImageTextureFromURL(const FString& Url, UObject* Context,
 
 void UUMGManager::AddRootWidgetToWidgetTree(UWidgetTree* Container, UWidget* RootWidget)
 {
-    // TODO@Caleb196x: 有内存释放问题，导致无法删除蓝图类
     if (Container == nullptr || RootWidget == nullptr)
     {
         return;
@@ -396,7 +398,7 @@ void UUMGManager::AddRootWidgetToWidgetTree(UWidgetTree* Container, UWidget* Roo
         NewObjectFlags |= RF_Transient;
     }
 
-    UPanelSlot* PanelSlot = NewObject<UPanelSlot>(Container, UPanelSlot::StaticClass(), FName("PanelSlot_ReactorUMGWidgetBlueprint"), NewObjectFlags);
+    UPanelSlot* PanelSlot = NewObject<UPanelSlot>(Container, UPanelSlot::StaticClass(), NAME_None, NewObjectFlags);
     PanelSlot->Content = RootWidget;
 	
     RootWidget->Slot = PanelSlot;
