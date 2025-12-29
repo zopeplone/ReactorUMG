@@ -21,6 +21,11 @@ The plugin is built on **PuertTS** scripting and pairs with AI assistance so you
 
 ---
 
+
+https://github.com/user-attachments/assets/36417479-f78c-4d2c-aaf2-029aadb4ebcd
+
+
+
 [跳转到中文](./README_zh.md)
 
 <h2 id="767fa455">Contents</h2>
