@@ -59,7 +59,7 @@ ReactorUMG是一款可以帮助您在虚幻引擎（Unreal Engine）中使用 **
 + Unreal Engine **5.x**
 + **Node.js ≥ 18** 与 **Yarn / PNPM / NPM**（任选其一）
 + VSCode / Cursor
-+ Windows 10/11，Linux
++ Windows 10/11
 
 ---
 
