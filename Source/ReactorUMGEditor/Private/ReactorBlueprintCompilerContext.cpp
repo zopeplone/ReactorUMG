@@ -3,32 +3,31 @@
 #include "ReactorUMGWidgetBlueprint.h"
 #include "ReactorUMGBlueprintGeneratedClass.h"
 #include "ReactorUMGUtilityWidgetBlueprint.h"
+#include "Blueprint/WidgetTree.h"
 #include "Kismet2/KismetReinstanceUtilities.h"
 
-FReactorUMGBlueprintCompilerContext::FReactorUMGBlueprintCompilerContext(UWidgetBlueprint* SourceBlueprint,
-	FCompilerResultsLog& InMessageLog, const FKismetCompilerOptions& InCompilerOptions)
+FReactorUMGBlueprintCompilerContext::FReactorUMGBlueprintCompilerContext(UWidgetBlueprint *SourceBlueprint,
+																		 FCompilerResultsLog &InMessageLog, const FKismetCompilerOptions &InCompilerOptions)
 	: Super(SourceBlueprint, InMessageLog, InCompilerOptions)
 {
-	
 }
 
 FReactorUMGBlueprintCompilerContext::~FReactorUMGBlueprintCompilerContext()
 {
-	
 }
 
-void FReactorUMGBlueprintCompilerContext::EnsureProperGeneratedClass(UClass*& TargetUClass)
+void FReactorUMGBlueprintCompilerContext::EnsureProperGeneratedClass(UClass *&TargetUClass)
 {
-	if (TargetUClass && !((UObject*)TargetUClass)->IsA(UReactorUMGBlueprintGeneratedClass::StaticClass()))
+	if (TargetUClass && !((UObject *)TargetUClass)->IsA(UReactorUMGBlueprintGeneratedClass::StaticClass()))
 	{
 		FKismetCompilerUtilities::ConsignToOblivion(TargetUClass, Blueprint->bIsRegeneratingOnLoad);
 		TargetUClass = nullptr;
 	}
 }
 
-void FReactorUMGBlueprintCompilerContext::SpawnNewClass(const FString& NewClassName)
+void FReactorUMGBlueprintCompilerContext::SpawnNewClass(const FString &NewClassName)
 {
-	UReactorUMGBlueprintGeneratedClass* BlueprintGeneratedClass = FindObject<UReactorUMGBlueprintGeneratedClass>(Blueprint->GetOutermost(), *NewClassName);
+	UReactorUMGBlueprintGeneratedClass *BlueprintGeneratedClass = FindObject<UReactorUMGBlueprintGeneratedClass>(Blueprint->GetOutermost(), *NewClassName);
 
 	if (BlueprintGeneratedClass == nullptr)
 	{
@@ -42,23 +41,38 @@ void FReactorUMGBlueprintCompilerContext::SpawnNewClass(const FString& NewClassN
 	NewClass = BlueprintGeneratedClass;
 }
 
-void FReactorUMGBlueprintCompilerContext::CopyTermDefaultsToDefaultObject(UObject* DefaultObject)
+void FReactorUMGBlueprintCompilerContext::CopyTermDefaultsToDefaultObject(UObject *DefaultObject)
 {
-	
 }
 
-void FReactorUMGBlueprintCompilerContext::FinishCompilingClass(UClass* Class)
+void FReactorUMGBlueprintCompilerContext::FinishCompilingClass(UClass *Class)
 {
 	if (Class)
 	{
 		UE_LOG(LogTemp, Log, TEXT("FinishCompilingClass %s"), *Class->GetName())
 	}
 
-	if (UReactorUMGWidgetBlueprint* WidgetBlueprint = Cast<UReactorUMGWidgetBlueprint>(Blueprint))
+	if (UReactorUMGWidgetBlueprint *WidgetBlueprint = Cast<UReactorUMGWidgetBlueprint>(Blueprint))
 	{
+		// 在执行 JS 脚本之前，清理 WidgetTree 中之前编译时创建的 Widget
+		// 确保从干净的状态开始，每次编译都重新创建所有 Widget
+		if (WidgetBlueprint->WidgetTree)
+		{
+			TArray<UWidget *> AllWidgets;
+			WidgetBlueprint->WidgetTree->GetAllWidgets(AllWidgets);
+			for (UWidget *Widget : AllWidgets)
+			{
+				if (Widget)
+				{
+					Widget->MarkAsGarbage();
+				}
+			}
+		}
+		WidgetBlueprint->WidgetVariableNameToGuidMap.Empty();
+
 		const FReactorUMGCompilerLog Logger(MessageLog);
 		WidgetBlueprint->SetupTsScripts(Logger, true, true);
-		UReactorUMGBlueprintGeneratedClass* BPGClass = CastChecked<UReactorUMGBlueprintGeneratedClass>(Class);
+		UReactorUMGBlueprintGeneratedClass *BPGClass = CastChecked<UReactorUMGBlueprintGeneratedClass>(Class);
 		if (BPGClass)
 		{
 			BPGClass->MainScriptPath = WidgetBlueprint->GetMainScriptPath();
@@ -69,11 +83,27 @@ void FReactorUMGBlueprintCompilerContext::FinishCompilingClass(UClass* Class)
 		}
 	}
 
-	if (UReactorUMGUtilityWidgetBlueprint* UtilityWidgetBlueprint = Cast<UReactorUMGUtilityWidgetBlueprint>(Blueprint))
+	if (UReactorUMGUtilityWidgetBlueprint *UtilityWidgetBlueprint = Cast<UReactorUMGUtilityWidgetBlueprint>(Blueprint))
 	{
+		// 在执行 JS 脚本之前，清理 WidgetTree 中之前编译时创建的 Widget
+		// 确保从干净的状态开始，每次编译都重新创建所有 Widget
+		if (UtilityWidgetBlueprint->WidgetTree)
+		{
+			TArray<UWidget *> AllWidgets;
+			UtilityWidgetBlueprint->WidgetTree->GetAllWidgets(AllWidgets);
+			for (UWidget *Widget : AllWidgets)
+			{
+				if (Widget)
+				{
+					Widget->MarkAsGarbage();
+				}
+			}
+		}
+		UtilityWidgetBlueprint->WidgetVariableNameToGuidMap.Empty();
+
 		const FReactorUMGCompilerLog Logger(MessageLog);
 		UtilityWidgetBlueprint->SetupTsScripts(Logger, true, true);
-		UReactorUMGBlueprintGeneratedClass* BPGClass = CastChecked<UReactorUMGBlueprintGeneratedClass>(Class);
+		UReactorUMGBlueprintGeneratedClass *BPGClass = CastChecked<UReactorUMGBlueprintGeneratedClass>(Class);
 		if (BPGClass)
 		{
 			BPGClass->MainScriptPath = UtilityWidgetBlueprint->GetMainScriptPath();
